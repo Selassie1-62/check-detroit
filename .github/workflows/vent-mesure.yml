@@ -1,0 +1,39 @@
+name: Mesures (sémaphores + bouées)
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # toutes les 30 minutes
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: depot
+  cancel-in-progress: false
+
+jobs:
+  mesures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Bouées Cefas (Hastings)
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node bouees.mjs
+      - name: Sémaphores Météo-France
+        env:
+          MF_APIKEY: ${{ secrets.MF_APIKEY }}
+        run: node obs.mjs
+        continue-on-error: true
+      - name: Publier les mesures
+        run: |
+          git config user.name "check-detroit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          for f in bouees.json bouees-state.json obs.json stations-mf.json; do [ -f "$f" ] && git add "$f"; done
+          git diff --cached --quiet || (git commit -m "Mesures" && git pull --rebase && git push)
