@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Check Détroit</title>
+<meta name="description" content="Conditions de foil dans le détroit du Pas-de-Calais : prone, downwind, wing.">
+<meta name="theme-color" content="#10232e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Mise en page : colonne unique façon carnet de bord, bouton Check en tête, verdicts puis fenêtres puis détail. */
+:root {
+  --bg: #eef2f1; --card: #ffffff; --ink: #10232e; --muted: #56676e; --line: #d3dcdb;
+  --sea: #1b6a7a; --sea-ink: #ffffff; --go: #2c8a57; --maybe: #b9801a; --no: #9aa7aa;
+  --go-bg: #e3f3ea; --maybe-bg: #fbf0dc; --no-bg: #eef1f1;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c171d; --card: #13232b; --ink: #e6eef0; --muted: #93a6ad; --line: #24363f;
+  --sea: #3fa3b5; --sea-ink: #04151b; --go: #4cc283; --maybe: #e2a93e; --no: #6d7d82;
+  --go-bg: #12301f; --maybe-bg: #33270f; --no-bg: #18262d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0c171d; --card: #13232b; --ink: #e6eef0; --muted: #93a6ad; --line: #24363f;
+  --sea: #3fa3b5; --sea-ink: #04151b; --go: #4cc283; --maybe: #e2a93e; --no: #6d7d82;
+  --go-bg: #12301f; --maybe-bg: #33270f; --no-bg: #18262d; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h1 { font-size: 2.4rem; line-height: 1; }
+h2 { font-size: 1.45rem; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.num { font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 14px; }
+.checkrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+button.check { font: 700 1.5rem/1 var(--display); letter-spacing: .08em; text-transform: uppercase;
+  background: var(--sea); color: var(--sea-ink); border: 0; border-radius: 999px; padding: 16px 40px; cursor: pointer; }
+button.check:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-visible { outline: 3px solid var(--maybe); outline-offset: 2px; }
+button.check[disabled] { opacity: .6; cursor: progress; }
+.status { color: var(--muted); font-size: .92rem; min-width: 0; }
+.models { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.mtag { font-size: .78rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.mtag.ok { color: var(--go); border-color: var(--go); }
+.mtag.ko { color: var(--maybe); border-color: var(--maybe); text-decoration: line-through; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.card h3 { margin: 0; font: 600 1.15rem/1.15 var(--display); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .92rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+.verdicts { display: flex; flex-wrap: wrap; gap: 6px; }
+.v { font-size: .8rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; letter-spacing: .02em; }
+.v.go { background: var(--go-bg); color: var(--go); }
+.v.maybe { background: var(--maybe-bg); color: var(--maybe); }
+.v.no { background: var(--no-bg); color: var(--no); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 .9rem var(--body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.wins { display: grid; gap: 8px; }
+.win { display: grid; grid-template-columns: 6px 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.win .bar { background: var(--no); } .win.go .bar { background: var(--go); } .win.maybe .bar { background: var(--maybe); }
+.win .body { padding: 10px 12px; display: grid; gap: 3px; min-width: 0; }
+.win .top { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.win .when { font: 600 1.1rem var(--display); }
+.win .what { font-weight: 700; }
+.win .meta { color: var(--muted); font-size: .9rem; }
+.empty { color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 10px; padding: 14px; }
+.tablebox { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--card); }
+thead th { font-weight: 600; color: var(--muted); }
+tr.night td { opacity: .55; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select, input { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+input[type=number] { width: 5.5em; }
+a { color: var(--sea); }
+.note { color: var(--muted); font-size: .85rem; }
+.links { display: grid; gap: 6px; }
+section { display: grid; gap: 10px; }
+@media (prefers-reduced-motion: no-preference) { button.check:not([disabled]):active { transform: scale(.98); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Check Détroit</h1>
+      <p class="sub">Foil sur la Côte d'Opale, d'Hardelot à Calais : prone, downwind, wing.</p>
+    </div>
+    <div class="checkrow">
+      <button class="check" id="check" type="button">Check</button>
+      <div class="status">
+        <div id="status">Appuie sur Check pour interroger les 8 modèles.</div>
+        <div class="models" id="models"></div>
+      </div>
+    </div>
+  </header>
+
+  <section aria-labelledby="h-now">
+    <h2 id="h-now">Maintenant</h2>
+    <div class="grid" id="now"><div class="empty">Les conditions actuelles des six zones s'afficheront ici.</div></div>
+  </section>
+
+  <section aria-labelledby="h-buoy">
+    <h2 id="h-buoy">Bouées en amont · houle qui arrive</h2>
+    <div class="grid" id="buoys"><div class="empty">La bouée de Hastings (Manche Est, ~1 h 30 à 2 h en amont pour la houle d'W à SW) s'affichera ici, mise à jour toutes les 30 minutes.</div></div>
+  </section>
+
+  <section aria-labelledby="h-obs">
+    <h2 id="h-obs">Vent mesuré · sémaphores</h2>
+    <div class="grid" id="obs"><div class="empty">Le vent réel des sémaphores (Gris-Nez, Boulogne, Calais…) s'affichera ici, mis à jour toutes les 30 minutes.</div></div>
+  </section>
+
+  <section aria-labelledby="h-win">
+    <h2 id="h-win">Prochaines fenêtres · 3 jours</h2>
+    <div class="filters" role="group" aria-label="Filtrer par discipline">
+      <button class="chip" type="button" data-f="all" aria-pressed="true">Tout</button>
+      <button class="chip" type="button" data-f="prone" aria-pressed="false">Prone</button>
+      <button class="chip" type="button" data-f="downwind" aria-pressed="false">Downwind</button>
+      <button class="chip" type="button" data-f="wing" aria-pressed="false">Wing</button>
+    </div>
+    <div class="wins" id="wins"><div class="empty">Les créneaux jouables de jour, avec le support conseillé, s'afficheront ici.</div></div>
+  </section>
+
+  <section aria-labelledby="h-det">
+    <h2 id="h-det">Détail par modèle</h2>
+    <div class="row">
+      <label for="spot">Zone</label>
+      <select id="spot"></select>
+      <label for="kg">Ton poids (kg)</label>
+      <input id="kg" type="number" min="40" max="130" step="1" value="75">
+    </div>
+    <div class="tablebox"><table id="detail"><tbody><tr><td>Le tableau heure par heure (toutes les 3 h) s'affichera ici.</td></tr></tbody></table></div>
+    <p class="note" id="tides"></p>
+  </section>
+
+  <section aria-labelledby="h-src">
+    <h2 id="h-src">Mesures et sources</h2>
+    <div class="links">
+      <a href="https://www.geodunes.fr/acces-aux-donnees-temps-reel-de-la-bouee-dambleteuse-62/" target="_blank" rel="noopener">Bouée houlographe d'Ambleteuse (GeoDunes) : mer d'W à SW</a>
+      <a href="https://marc.ifremer.fr/resultats/vagues/modeles_atlantique_nord" target="_blank" rel="noopener">MARC Ifremer (WAVEWATCH III haute résolution côtière) : vagues à la côte</a>
+      <a href="https://wavenet.cefas.co.uk/" target="_blank" rel="noopener">Cefas WaveNet : bouée de Hastings (Open Government Licence v3.0)</a>
+      <span class="note">Hull et al. (2023). WaveNet near real-time data feed - from the past 48 hours. Cefas, UK. V1. <a href="https://doi.org/10.14466/CefasDataHub.142" target="_blank" rel="noopener">doi:10.14466/CefasDataHub.142</a> · <a href="https://data.cefas.co.uk/view/21682" target="_blank" rel="noopener">fiche des données</a></span>
+      <a href="https://maree.shom.fr/harbor/BOULOGNE-SUR-MER/hlt/0" target="_blank" rel="noopener">Marées et coefficients SHOM (Boulogne-sur-Mer)</a>
+      <a href="https://www.windy.com/50.81/1.54" target="_blank" rel="noopener">Windy, Ambleteuse</a>
+      <a href="https://www.windguru.cz/" target="_blank" rel="noopener">Windguru (AROME, WG)</a>
+      <a href="https://portail-api.meteofrance.fr/" target="_blank" rel="noopener">Météo-France, données d'observation (sémaphores)</a>
+    </div>
+    <p class="note">Prévisions : <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, à partir des modèles de Météo-France (AROME, MFWAM), DWD (ICON-D2, ICON-EWAM), ECMWF (IFS, WAM) et NOAA (GFS, GFS-Wave). Consensus pondéré : AROME et EWAM pèsent le plus, d'après nos comparaisons avec la bouée. Les marées affichées sont celles du modèle, à vérifier sur SHOM.</p>
+    <p class="note"><strong>La mesure prime sur la prévision.</strong> Les modèles ratent souvent la houle longue : regarde la bouée avant de partir. Sécurité : jamais seul, VHF ou téléphone étanche, et pas de vent side-offshore ou offshore en downwind.</p>
+  </section>
+</div>
+
+<script type="module">
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, shoreType, compass, power, nowHour, wingSize } from "./logic.js";
+
+const $ = (id) => document.getElementById(id);
+const state = { spots: null, days: null, wins: [], filter: "all", raw: null };
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+const r1 = (x) => (x == null ? "—" : (Math.round(x * 10) / 10).toLocaleString("fr-FR"));
+const r0 = (x) => (x == null ? "—" : Math.round(x).toString());
+const LBL = { go: "GO", maybe: "Limite", no: "Non" };
+const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", timeZone: "UTC" });
+const fmtDay = (t) => dayFmt.format(new Date(t.slice(0, 10) + "T12:00Z"));
+const hh = (t) => t.slice(11, 13) + "h";
+
+$("kg").value = store.get("kg", 75);
+$("kg").addEventListener("change", () => { store.set("kg", +$("kg").value || 75); if (state.spots) refresh(); });
+SPOTS.forEach((s) => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.name; $("spot").append(o); });
+$("spot").value = store.get("spot", "wimereux");
+$("spot").addEventListener("change", () => { store.set("spot", $("spot").value); renderDetail(); });
+document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+  state.filter = b.dataset.f;
+  document.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  renderWins();
+}));
+
+async function check() {
+  const btn = $("check");
+  btn.disabled = true; btn.textContent = "…";
+  $("status").textContent = "Interrogation des modèles…";
+  try {
+    const raw = await fetchAll();
+    state.raw = raw;
+    state.spots = buildHours(raw);
+    state.days = daylight(raw.sun);
+    const okW = raw.wind.filter((r) => r.data).length, okV = raw.wave.filter((r) => r.data).length;
+    const t = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    $("status").textContent = `Check à ${t} · vent ${okW}/${WIND_MODELS.length} modèles · vagues ${okV}/${WAVE_MODELS.length} modèles`;
+    $("models").innerHTML = [...raw.wind, ...raw.wave].map((r) => `<span class="mtag ${r.data ? "ok" : "ko"}" title="${r.error || r.id}">${r.model.label}</span>`).join("");
+    try { refresh(); } catch (e) { console.error(e); $("status").textContent += " · erreur d'affichage, relance Check"; }
+  } catch (e) {
+    $("status").textContent = "Impossible de joindre Open-Meteo. Vérifie la connexion puis relance Check.";
+  } finally { btn.disabled = false; btn.textContent = "Check"; }
+}
+$("check").addEventListener("click", check);
+
+function refresh() {
+  const kg = +$("kg").value || 75;
+  state.wins = analyse(state.spots, state.days, { weight: kg });
+  renderNow(kg); renderWins(); renderDetail();
+}
+
+function verdict(level, text) { return `<span class="v ${level}">${text} · ${LBL[level]}</span>`; }
+
+function renderNow(kg) {
+  $("now").innerHTML = SPOTS.map((s) => {
+    const h = nowHour(state.spots, s.id); if (!h) return "";
+    const c = h.c, day = isDay(h.t, state.days);
+    const st = c.wdir == null ? null : shoreType(c.wdir, s.facing);
+    const p = evalProne(c, s), w = evalWing(c, s, kg);
+    const runs = RUNS.filter((r) => r.spot === s.id).map((r) => ({ r, e: evalDownwind(c, r) })).filter((x) => x.e.level !== "no");
+    const v = [verdict(day ? p.level : "no", "Prone"), verdict(day ? w.level : "no", "Wing" + (w.size && w.level !== "no" ? ` ${r1(w.size)} m²` : ""))];
+    runs.forEach(({ r, e }) => v.push(verdict(day ? e.level : "no", `DW ${r.name}${e.support === "wing" ? " (wing)" : ""}`)));
+    if (!runs.length) v.push(verdict("no", "Downwind"));
+    return `<article class="card"><h3>${s.name}</h3>
+      <dl class="kv">
+        <dt>Vent</dt><dd>${r0(c.wind)} nds (raf. ${r0(c.gust)}) ${compass(c.wdir)}${st ? " · " + st.label : ""}</dd>
+        <dt>Mer</dt><dd>Hs ${r1(c.hs)} m · ${r1(c.tm)} s</dd>
+        <dt>Mer du vent</dt><dd>${r1(c.wwh)} m · ${r1(c.wwp)} s ${compass(c.wwd)}</dd>
+        <dt>Houle</dt><dd>${r1(c.swh)} m · ${r1(c.swp)} s ${compass(c.swd)}</dd>
+        <dt>Puissance</dt><dd>${r1(power(c.hs ?? 0, c.tm ?? 0))} kW/m</dd>
+        ${h.sst != null ? `<dt>Eau</dt><dd>${r1(h.sst)} °C</dd>` : ""}
+      </dl>
+      <div class="verdicts">${v.join("")}</div>
+      ${day ? "" : `<p class="note">Il fait nuit : pas de session conseillée.</p>`}
+    </article>`;
+  }).join("");
+}
+
+function renderWins() {
+  const list = state.wins.filter((w) => state.filter === "all" || w.kind === state.filter);
+  if (!state.spots) return;
+  if (!list.length) { $("wins").innerHTML = `<div class="empty">Aucun créneau jouable de jour sur 3 jours${state.filter === "all" ? "" : " pour cette discipline"}. Relance Check plus tard : les modèles sont mis à jour plusieurs fois par jour.</div>`; return; }
+  $("wins").innerHTML = list.map((w) => {
+    const b = w.best;
+    let support = "";
+    if (w.kind === "downwind") support = b.support === "paddle" ? "Paddle (ou wing)" : "Wing ou parawing";
+    if (w.kind === "wing") support = b.size ? `Wing ${r1(b.size)} m² (indicatif)` : "Wing";
+    if (w.kind === "prone") support = "Planche de prone, grande aile";
+    const same = w.start.slice(0, 10) === w.end.slice(0, 10);
+    const when = same ? `${fmtDay(w.start)} · ${hh(w.start)}–${hh(w.end)}` : `${fmtDay(w.start)} ${hh(w.start)} → ${fmtDay(w.end)} ${hh(w.end)}`;
+    return `<article class="win ${w.level}"><div class="bar"></div><div class="body">
+      <div class="top"><span class="when">${when}</span><span class="v ${w.level}">${LBL[w.level]}</span><span class="what">${w.label} · ${w.where}</span></div>
+      <div class="meta">${(b.why || []).join(" · ")}</div>
+      <div class="meta">${support} · confiance ${w.conf}${w.peak ? ` · meilleur vers ${hh(w.peak)}` : ""}</div>
+    </div></article>`;
+  }).join("");
+}
+
+function renderDetail() {
+  if (!state.spots) return;
+  const id = $("spot").value, S = state.spots[id];
+  const nh = nowHour(state.spots, id);
+  if (!nh) { $("detail").innerHTML = "<tbody><tr><td>Pas de données pour cette zone.</td></tr></tbody>"; $("tides").textContent = ""; return; }
+  const nowT = nh.t;
+  const rows = S.hours.filter((h) => h.t >= nowT && +h.t.slice(11, 13) % 3 === 0).slice(0, 18);
+  const wm = WIND_MODELS, vm = WAVE_MODELS;
+  const head = `<thead><tr><th>Heure</th><th>Vent</th><th>Dir.</th>${wm.map((m) => `<th>${m.label}</th>`).join("")}<th>Hs</th>${vm.map((m) => `<th>${m.label}</th>`).join("")}<th>Houle</th><th>kW/m</th><th>Marée</th></tr></thead>`;
+  const body = rows.map((h) => {
+    const c = h.c, night = !isDay(h.t, state.days);
+    return `<tr class="${night ? "night" : ""}"><td>${fmtDay(h.t)} ${hh(h.t)}</td><td>${r0(c.wind)}/${r0(c.gust)}</td><td>${compass(c.wdir)}</td>
+      ${wm.map((m) => `<td>${h.wind[m.key] ? r0(h.wind[m.key].s) : "—"}</td>`).join("")}
+      <td>${r1(c.hs)}</td>${vm.map((m) => `<td>${h.wave[m.key] ? r1(h.wave[m.key].hs) : "—"}</td>`).join("")}
+      <td>${r1(c.swh)} m ${r0(c.swp)} s ${compass(c.swd)}</td><td>${r1(power(c.hs ?? 0, c.tm ?? 0))}</td><td>${h.tide == null ? "—" : r1(h.tide) + " m"}</td></tr>`;
+  }).join("");
+  $("detail").innerHTML = head + `<tbody>${body}</tbody>`;
+  const tz = S.tides.filter((x) => x.t >= nowT).slice(0, 4);
+  $("tides").textContent = tz.length ? "Marée (modèle, indicatif) : " + tz.map((x) => `${x.type === "PM" ? "pleine mer" : "basse mer"} ${fmtDay(x.t)} ${hh(x.t)}`).join(" · ") + ". Vérifie sur SHOM." : "";
+}
+
+async function loadObs() {
+  try {
+    const r = await fetch("obs.json?" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const o = await r.json();
+    const now = Date.now();
+    const cards = (o.stations || []).map((s) => {
+      if (s.error || s.wind == null) return `<article class="card"><h3>${s.label}</h3><p class="note">Pas de mesure disponible.</p></article>`;
+      const age = Math.round((now - Date.parse(s.time)) / 60000);
+      const old = age > 90;
+      return `<article class="card"><h3>${s.label}</h3>
+        <dl class="kv"><dt>Vent</dt><dd><strong>${s.wind} nds</strong> ${compass(s.dir)} (${s.dir ?? "—"}°)</dd>
+        <dt>Rafales</dt><dd>${s.gust ?? "—"} nds</dd>
+        <dt>Mesure</dt><dd>${new Date(s.time).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}${old ? " · ancienne" : ` · il y a ${age} min`}</dd></dl></article>`;
+    });
+    if (cards.length) $("obs").innerHTML = cards.join("");
+  } catch {}
+}
+loadObs();
+
+async function loadBuoys() {
+  try {
+    const r = await fetch("bouees.json?" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const o = await r.json();
+    const cards = (o.buoys || []).filter((b) => b.last).map((b) => {
+      const L = b.last, S = b.series || [];
+      const ref = S.find((x) => Date.parse(x.t) >= Date.parse(L.t) - 6 * 3600e3) || S[0];
+      const dH = ref ? L.Hm0 - ref.Hm0 : 0, dT = ref ? L.Tpeak - ref.Tpeak : 0;
+      const arrow = (d, eps) => (d > eps ? "↗" : d < -eps ? "↘" : "→");
+      const age = Math.round((Date.now() - Date.parse(L.t)) / 60000) - 30; // horodatage = début de mesure
+      const longSwell = L.Tpeak >= 10 && L.Hm0 >= 0.25 && L.W_PDIR >= 195 && L.W_PDIR <= 290;
+      const eta = Math.round((b.distKm / (0.78 * L.Tpeak * 3.6)) * 10) / 10;
+      return `<article class="card"><h3>${b.label}</h3>
+        ${longSwell ? `<span class="v go">Houle longue en approche · ~${eta} h</span>` : ""}
+        <dl class="kv">
+          <dt>Hauteur</dt><dd><strong>${r1(L.Hm0)} m</strong> ${arrow(dH, 0.05)} (${dH >= 0 ? "+" : ""}${r1(dH)} m en 6 h)</dd>
+          <dt>Période pic</dt><dd><strong>${r1(L.Tpeak)} s</strong> ${arrow(dT, 0.5)}</dd>
+          <dt>Provenance</dt><dd>${compass(L.W_PDIR)} (${r0(L.W_PDIR)}°)</dd>
+          ${L.TEMP != null ? `<dt>Eau</dt><dd>${r1(L.TEMP)} °C</dd>` : ""}
+          <dt>Mesure</dt><dd>il y a ${Math.max(0, age)} min</dd>
+        </dl><p class="note">${b.note}. Source : <a href="https://wavenet.cefas.co.uk/" target="_blank" rel="noopener">Cefas WaveNet</a>, Hull et al. (2023), doi:10.14466/CefasDataHub.142 (OGL v3).</p></article>`;
+    });
+    if (cards.length) $("buoys").innerHTML = cards.join("");
+  } catch {}
+}
+loadBuoys();
+
+check();
+$("check").addEventListener("click", () => { loadObs(); loadBuoys(); });
+</script>
+</body>
+</html>
