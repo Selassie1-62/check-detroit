@@ -110,7 +110,7 @@ section { display: grid; gap: 10px; }
 
   <section aria-labelledby="h-buoy">
     <h2 id="h-buoy">Bouées en amont · houle qui arrive</h2>
-    <div class="grid" id="buoys"><div class="empty">Hastings et Greenwich (en amont pour la houle d'W à SW) et Sandettie (pour la mer de N à NE) s'afficheront ici, mise à jour toutes les 30 minutes.</div></div>
+    <div class="grid" id="buoys"><div class="empty">Hastings et Greenwich (en amont pour la houle d'W à SW), West Gabbard et Sandettie (pour la houle de N à NE) s'afficheront ici, mise à jour toutes les 30 minutes.</div></div>
   </section>
 
   <section aria-labelledby="h-obs">
@@ -309,10 +309,12 @@ async function loadBuoys() {
       const dH = ref ? L.Hm0 - ref.Hm0 : 0, dT = ref ? L.Tpeak - ref.Tpeak : 0;
       const arrow = (d, eps) => (d > eps ? "↗" : d < -eps ? "↘" : "→");
       const age = Math.round((Date.now() - Date.parse(L.t)) / 60000) - (b.source ? 0 : 30); // Cefas : horodatage = début de mesure
-      const longSwell = b.id === "HASTINGSWN" && L.Tpeak >= 10 && L.Hm0 >= 0.25 && L.W_PDIR >= 195 && L.W_PDIR <= 290;
+      const A = b.alert, d = L.W_PDIR;
+      const inSec = d != null && A && (A.dirFrom <= A.dirTo ? d >= A.dirFrom && d <= A.dirTo : d >= A.dirFrom || d <= A.dirTo);
+      const longSwell = !!A && L.Tpeak >= A.minTp && L.Hm0 >= A.minHs && inSec;
       const eta = Math.round((b.distKm / (0.78 * L.Tpeak * 3.6)) * 10) / 10;
       return `<article class="card"><h3>${b.label}</h3>
-        ${longSwell ? `<span class="v go">Houle longue en approche · ~${eta} h</span>` : ""}
+        ${longSwell ? `<span class="v go">Houle longue en approche · ~${eta} h · ${A.spots}</span>` : ""}
         <dl class="kv">
           <dt>Hauteur</dt><dd><strong>${L.Hm0 == null ? "—" : r1(L.Hm0) + " m"}</strong> ${arrow(dH, 0.05)} (${dH >= 0 ? "+" : ""}${r1(dH)} m en 6 h)</dd>
           <dt>Période pic</dt><dd><strong>${r1(L.Tpeak)} s</strong> ${arrow(dT, 0.5)}</dd>
