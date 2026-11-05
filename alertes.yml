@@ -1,0 +1,36 @@
+name: Alertes foil
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # toutes les 3 heures (heure UTC)
+  workflow_dispatch: {}      # bouton « Run workflow » pour tester à la main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: depot
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Vérifier les conditions et envoyer les alertes
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          RIDER_KG: ${{ vars.RIDER_KG }}
+          ALERT_KINDS: ${{ vars.ALERT_KINDS }}
+        run: node alert.mjs
+      - name: Mémoriser les alertes déjà envoyées
+        run: |
+          git config user.name "check-detroit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add alerts-state.json
+          git diff --cached --quiet || (git commit -m "Alertes envoyées" && git pull --rebase && git push)

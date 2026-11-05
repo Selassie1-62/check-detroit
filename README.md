@@ -14,7 +14,8 @@ ou de downwind apparaît.
 | `logic.js` | Récupération des modèles, consensus, seuils, fenêtres (partagé page + robot) |
 | `alert.mjs` | Le robot d'alertes |
 | `.github/workflows/alertes.yml` | Lance le robot toutes les 3 h |
-| `obs.mjs` + `.github/workflows/vent-mesure.yml` | Lit le vent réel des sémaphores toutes les 30 min et écrit `obs.json` |
+| `obs.mjs` + `.github/workflows/vent-mesure.yml` | Robot « Mesures » (toutes les 30 min) : vent des sémaphores → `obs.json` |
+| `bouees.mjs` | Lit la bouée de Hastings (Cefas WaveNet, sans clé) toutes les 30 min, écrit `bouees.json`, alerte « houle longue en approche » |
 | `alerts-state.json` | Mémoire des alertes déjà envoyées (anti-doublon) |
 | `package.json` | Réglage technique pour Node |
 
@@ -70,7 +71,7 @@ remplace le secret `NTFY_TOPIC` et réabonne-toi dans l'app.
 
 ## Limites connues
 - Les marées viennent du modèle Open-Meteo : indicatives, à vérifier sur SHOM. Pas de coefficient.
-- La bouée GeoDunes n'est pas encore intégrée (pas d'API publique) : lien direct dans la page. À demander à GeoDunes.
+- Bouée GeoDunes d'Ambleteuse : pas d'accès automatisé sans contribution financière (réponse GeoDunes du 03/11/2026). Consultation manuelle via le lien.
 - MARC (Ifremer) : simple lien dans la page. Ses données sont réservées à un usage personnel, sans rediffusion ; une intégration automatique demande l'accord d'Ifremer (formulaire http://forms.ifremer.fr/lops-oc/marc-ww3/).
 - Les modèles ratent souvent la houle longue : le site peut sous-estimer une session de prone. La bouée prime.
 - Données Open-Meteo gratuites pour un usage **non commercial**, avec attribution (affichée en bas de page).

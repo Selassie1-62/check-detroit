@@ -108,6 +108,11 @@ section { display: grid; gap: 10px; }
     <div class="grid" id="now"><div class="empty">Les conditions actuelles des six zones s'afficheront ici.</div></div>
   </section>
 
+  <section aria-labelledby="h-buoy">
+    <h2 id="h-buoy">Bouées en amont · houle qui arrive</h2>
+    <div class="grid" id="buoys"><div class="empty">La bouée de Hastings (Manche Est, ~1 h 30 à 2 h en amont pour la houle d'W à SW) s'affichera ici, mise à jour toutes les 30 minutes.</div></div>
+  </section>
+
   <section aria-labelledby="h-obs">
     <h2 id="h-obs">Vent mesuré · sémaphores</h2>
     <div class="grid" id="obs"><div class="empty">Le vent réel des sémaphores (Gris-Nez, Boulogne, Calais…) s'affichera ici, mis à jour toutes les 30 minutes.</div></div>
@@ -141,6 +146,8 @@ section { display: grid; gap: 10px; }
     <div class="links">
       <a href="https://www.geodunes.fr/acces-aux-donnees-temps-reel-de-la-bouee-dambleteuse-62/" target="_blank" rel="noopener">Bouée houlographe d'Ambleteuse (GeoDunes) : mer d'W à SW</a>
       <a href="https://marc.ifremer.fr/resultats/vagues/modeles_atlantique_nord" target="_blank" rel="noopener">MARC Ifremer (WAVEWATCH III haute résolution côtière) : vagues à la côte</a>
+      <a href="https://wavenet.cefas.co.uk/" target="_blank" rel="noopener">Cefas WaveNet : bouée de Hastings (Open Government Licence v3.0)</a>
+      <span class="note">Hull et al. (2023). WaveNet near real-time data feed - from the past 48 hours. Cefas, UK. V1. <a href="https://doi.org/10.14466/CefasDataHub.142" target="_blank" rel="noopener">doi:10.14466/CefasDataHub.142</a> · <a href="https://data.cefas.co.uk/view/21682" target="_blank" rel="noopener">fiche des données</a></span>
       <a href="https://maree.shom.fr/harbor/BOULOGNE-SUR-MER/hlt/0" target="_blank" rel="noopener">Marées et coefficients SHOM (Boulogne-sur-Mer)</a>
       <a href="https://www.windy.com/50.81/1.54" target="_blank" rel="noopener">Windy, Ambleteuse</a>
       <a href="https://www.windguru.cz/" target="_blank" rel="noopener">Windguru (AROME, WG)</a>
@@ -291,8 +298,36 @@ async function loadObs() {
 }
 loadObs();
 
+async function loadBuoys() {
+  try {
+    const r = await fetch("bouees.json?" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const o = await r.json();
+    const cards = (o.buoys || []).filter((b) => b.last).map((b) => {
+      const L = b.last, S = b.series || [];
+      const ref = S.find((x) => Date.parse(x.t) >= Date.parse(L.t) - 6 * 3600e3) || S[0];
+      const dH = ref ? L.Hm0 - ref.Hm0 : 0, dT = ref ? L.Tpeak - ref.Tpeak : 0;
+      const arrow = (d, eps) => (d > eps ? "↗" : d < -eps ? "↘" : "→");
+      const age = Math.round((Date.now() - Date.parse(L.t)) / 60000) - 30; // horodatage = début de mesure
+      const longSwell = L.Tpeak >= 10 && L.Hm0 >= 0.25 && L.W_PDIR >= 195 && L.W_PDIR <= 290;
+      const eta = Math.round((b.distKm / (0.78 * L.Tpeak * 3.6)) * 10) / 10;
+      return `<article class="card"><h3>${b.label}</h3>
+        ${longSwell ? `<span class="v go">Houle longue en approche · ~${eta} h</span>` : ""}
+        <dl class="kv">
+          <dt>Hauteur</dt><dd><strong>${r1(L.Hm0)} m</strong> ${arrow(dH, 0.05)} (${dH >= 0 ? "+" : ""}${r1(dH)} m en 6 h)</dd>
+          <dt>Période pic</dt><dd><strong>${r1(L.Tpeak)} s</strong> ${arrow(dT, 0.5)}</dd>
+          <dt>Provenance</dt><dd>${compass(L.W_PDIR)} (${r0(L.W_PDIR)}°)</dd>
+          ${L.TEMP != null ? `<dt>Eau</dt><dd>${r1(L.TEMP)} °C</dd>` : ""}
+          <dt>Mesure</dt><dd>il y a ${Math.max(0, age)} min</dd>
+        </dl><p class="note">${b.note}. Source : <a href="https://wavenet.cefas.co.uk/" target="_blank" rel="noopener">Cefas WaveNet</a>, Hull et al. (2023), doi:10.14466/CefasDataHub.142 (OGL v3).</p></article>`;
+    });
+    if (cards.length) $("buoys").innerHTML = cards.join("");
+  } catch {}
+}
+loadBuoys();
+
 check();
-$("check").addEventListener("click", loadObs);
+$("check").addEventListener("click", () => { loadObs(); loadBuoys(); });
 </script>
 </body>
 </html>
