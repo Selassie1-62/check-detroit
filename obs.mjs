@@ -72,11 +72,12 @@ for (const s of list) {
     const raw = await get(`/station/infrahoraire-6m?id_station=${encodeURIComponent(s.id)}`);
     const arr = Array.isArray(raw) ? raw : [raw];
     const last = arr.filter((o) => o && o.ff != null).sort((a, b) => String(b.validity_time).localeCompare(String(a.validity_time)))[0];
+    if (last && !process.env.OBS_KEYS_LOGGED) { console.log("Champs fournis :", Object.keys(last).join(", ")); process.env.OBS_KEYS_LOGGED = "1"; }
     if (!last) { out.stations.push({ ...s, error: "pas de mesure de vent" }); continue; }
     out.stations.push({
       ...s, time: last.validity_time,
       wind: Math.round(last.ff * KT), dir: last.dd ?? null,
-      gust: last.fxi10 != null ? Math.round(last.fxi10 * KT) : null,
+      gust: (() => { const g = last.fxi10 ?? last.fxi ?? last.fxi3s ?? last.fxy; return g != null ? Math.round(g * KT) : null; })(),
       tempC: last.t != null ? Math.round((last.t - 273.15) * 10) / 10 : null,
     });
   } catch (e) { out.stations.push({ ...s, error: String(e.message).slice(0, 120) }); }
