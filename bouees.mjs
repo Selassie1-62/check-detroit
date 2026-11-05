@@ -8,7 +8,7 @@ const URL = "https://data-api.cefas.co.uk/api/recordsets/12651/data?page=1&resul
 const BUOYS = [
   { id: "HASTINGSWN", match: /^HASTINGS/i, label: "Hastings (Manche Est)", distKm: 58, note: "En amont pour la houle d'W à SW",
     alert: { dirFrom: 195, dirTo: 290, minTp: 10, minHs: 0.25, spots: "Wimereux, Équihen, Hardelot" } },
-  { id: "WGABBARD", match: /GABBARD|WGAB/i, label: "West Gabbard (mer du Nord)", distKm: 130, note: "En amont pour la houle de N à NNE",
+  { id: "WGABBARD", match: /GAB/i, label: "West Gabbard 2 (mer du Nord)", distKm: 130, note: "En amont pour la houle de N à NNE",
     alert: { dirFrom: 330, dirTo: 40, minTp: 9, minHs: 0.4, spots: "Calais, Sangatte, Wissant" } },
 ];
 // Bateaux-feux du Met Office relayés par la NOAA (NDBC, domaine public) : mesures horaires.

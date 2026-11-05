@@ -4,7 +4,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 
 const KEY = process.env.MF_APIKEY;
-const BASE = "https://public-api.meteofrance.fr/public/DPObs/v1";
+const BASES = ["https://public-api.meteofrance.fr/public/DPObs/v1", "https://public-api.meteofrance.fr/public/DPObs/v2"];
 // Stations recherchées par nom dans la liste Météo-France (sémaphores et stations du littoral).
 const WANTED = [
   { key: "grisnez", label: "Cap Gris-Nez (Audinghen)", re: /GRIS.?NEZ|AUDINGHEN/i },
@@ -16,19 +16,40 @@ const WANTED = [
 const KT = 1.943844; // m/s → nœuds
 
 if (!KEY) { console.error("MF_APIKEY manquant (Settings > Secrets and variables > Actions)."); process.exit(1); }
-const H = { apikey: KEY, accept: "application/json" };
+// La clé peut être de type « API Key » (en-tête apikey) ou un jeton OAuth2 (en-tête Authorization) :
+// on essaie les combinaisons et on garde celle qui marche.
+const AUTHS = [{ apikey: KEY }, { Authorization: `Bearer ${KEY}` }];
+let combo = null;
+const errors = [];
+
+function parse(txt) {
+  try { return JSON.parse(txt); } catch {}
+  const lines = txt.trim().split(/\r?\n/); if (lines.length < 2) return txt;
+  const sep = lines[0].includes(";") ? ";" : ",";
+  const head = lines[0].split(sep).map((h) => h.replace(/"/g, "").trim());
+  return lines.slice(1).map((l) => { const c = l.split(sep).map((v) => v.replace(/"/g, "").trim()); const o = {};
+    head.forEach((h, i) => { const n = Number(c[i]); o[h] = c[i] === "" ? null : Number.isNaN(n) ? c[i] : n; }); return o; });
+}
 
 async function get(path) {
-  const r = await fetch(BASE + path, { headers: H });
-  const txt = await r.text();
-  if (!r.ok) throw new Error(`${r.status} ${path} ${txt.slice(0, 200)}`);
-  try { return JSON.parse(txt); } catch { return txt; }
+  const tries = combo ? [combo] : BASES.flatMap((b) => AUTHS.map((a) => ({ base: b, auth: a })));
+  for (const t of tries) {
+    for (const fmt of ["json", "csv"]) {
+      const url = t.base + path + (path.includes("?") ? "&" : "?") + "format=" + fmt;
+      const r = await fetch(url, { headers: { ...t.auth, accept: "*/*" } });
+      const txt = await r.text();
+      if (r.ok) { if (!combo) { combo = t; console.log(`API Météo-France OK : ${t.base} · en-tête ${Object.keys(t.auth)[0]} · ${fmt}`); } return parse(txt); }
+      errors.push(`${r.status} ${t.base.slice(-6)} ${Object.keys(t.auth)[0]} ${fmt} ${txt.slice(0, 90)}`);
+      if (r.status === 401 || r.status === 403 || r.status === 404) break; // inutile d'essayer l'autre format
+    }
+  }
+  throw new Error("Aucun accès ne fonctionne :\n  " + errors.slice(-8).join("\n  "));
 }
 
 // Liste des stations : mise en cache dans stations-mf.json (elle change rarement).
 async function stations() {
   try { return JSON.parse(await readFile("stations-mf.json", "utf8")); } catch {}
-  const raw = await get("/liste-stations?format=json");
+  const raw = await get("/liste-stations");
   const rows = Array.isArray(raw) ? raw : (raw.stations || raw.features?.map((f) => f.properties) || []);
   const found = [];
   for (const w of WANTED) {
@@ -43,11 +64,12 @@ async function stations() {
   return found;
 }
 
-const list = await stations();
+let list;
+try { list = await stations(); } catch (e) { console.error(e.message); process.exit(1); }
 const out = { updatedAt: new Date().toISOString(), source: "Météo-France, données d'observation (DPObs)", stations: [] };
 for (const s of list) {
   try {
-    const raw = await get(`/station/infrahoraire-6m?id_station=${encodeURIComponent(s.id)}&format=json`);
+    const raw = await get(`/station/infrahoraire-6m?id_station=${encodeURIComponent(s.id)}`);
     const arr = Array.isArray(raw) ? raw : [raw];
     const last = arr.filter((o) => o && o.ff != null).sort((a, b) => String(b.validity_time).localeCompare(String(a.validity_time)))[0];
     if (!last) { out.stations.push({ ...s, error: "pas de mesure de vent" }); continue; }
