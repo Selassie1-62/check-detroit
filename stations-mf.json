@@ -1,0 +1,32 @@
+[
+  {
+    "key": "grisnez",
+    "label": "Cap Gris-Nez (Audinghen)",
+    "id": "62054001",
+    "name": "CAP-GRIS-NEZ"
+  },
+  {
+    "key": "boulogne",
+    "label": "Boulogne (sémaphore)",
+    "id": "62160001",
+    "name": "BOULOGNE-SEM"
+  },
+  {
+    "key": "calais",
+    "label": "Calais",
+    "id": "62548002",
+    "name": "CALAIS-MARCK"
+  },
+  {
+    "key": "dunkerque",
+    "label": "Dunkerque",
+    "id": "59183001",
+    "name": "DUNKERQUE"
+  },
+  {
+    "key": "touquet",
+    "label": "Le Touquet",
+    "id": "62826001",
+    "name": "LE-TOUQUET"
+  }
+]
