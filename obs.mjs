@@ -7,7 +7,7 @@ const KEY = process.env.MF_APIKEY;
 const BASE = "https://public-api.meteofrance.fr/public/DPObs/v1";
 // Stations recherchées par nom dans la liste Météo-France (sémaphores et stations du littoral).
 const WANTED = [
-  { key: "grisnez", label: "Cap Gris-Nez", re: /GRIS.?NEZ/i },
+  { key: "grisnez", label: "Cap Gris-Nez (Audinghen)", re: /GRIS.?NEZ|AUDINGHEN/i },
   { key: "boulogne", label: "Boulogne (sémaphore)", re: /BOULOGNE/i },
   { key: "calais", label: "Calais", re: /CALAIS/i },
   { key: "dunkerque", label: "Dunkerque", re: /DUNKERQUE/i },
