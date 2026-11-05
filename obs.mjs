@@ -74,10 +74,23 @@ for (const s of list) {
     const last = arr.filter((o) => o && o.ff != null).sort((a, b) => String(b.validity_time).localeCompare(String(a.validity_time)))[0];
     if (last && !process.env.OBS_KEYS_LOGGED) { console.log("Champs fournis :", Object.keys(last).join(", ")); process.env.OBS_KEYS_LOGGED = "1"; }
     if (!last) { out.stations.push({ ...s, error: "pas de mesure de vent" }); continue; }
+    // Les mesures 6 min ne donnent pas toujours les rafales : on complète avec la mesure horaire.
+    const gustOf = (o) => { const g = o.fxi10 ?? o.fxi ?? o.fxi3s ?? o.fxy; return g != null ? Math.round(g * KT) : null; };
+    let gust = gustOf(last), gustHour = false;
+    if (gust == null) {
+      try {
+        const h = await get(`/station/horaire?id_station=${encodeURIComponent(s.id)}`);
+        const ha = (Array.isArray(h) ? h : [h]).filter((o) => o && typeof o === "object")
+          .sort((a, b) => String(b.validity_time).localeCompare(String(a.validity_time)));
+        if (ha[0] && !process.env.OBS_H_LOGGED) { console.log("Champs horaires :", Object.keys(ha[0]).join(", ")); process.env.OBS_H_LOGGED = "1"; }
+        const hg = ha.find((o) => gustOf(o) != null);
+        if (hg) { gust = gustOf(hg); gustHour = true; }
+      } catch (e) { console.log(`${s.label} : rafales horaires indisponibles (${String(e.message).slice(0, 60)})`); }
+    }
     out.stations.push({
-      ...s, time: last.validity_time,
+      ...s, time: last.validity_time, gustHour,
       wind: Math.round(last.ff * KT), dir: last.dd ?? null,
-      gust: (() => { const g = last.fxi10 ?? last.fxi ?? last.fxi3s ?? last.fxy; return g != null ? Math.round(g * KT) : null; })(),
+      gust,
       tempC: last.t != null ? Math.round((last.t - 273.15) * 10) / 10 : null,
     });
   } catch (e) { out.stations.push({ ...s, error: String(e.message).slice(0, 120) }); }
