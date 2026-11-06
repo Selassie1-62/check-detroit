@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-06T02:49:35.207Z",
+  "updatedAt": "2026-11-06T03:49:16.197Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-06T02:42:00Z",
+      "time": "2026-11-06T03:42:00Z",
       "gustHour": true,
-      "wind": 8,
-      "dir": 90,
+      "wind": 7,
+      "dir": 130,
       "gust": 9,
-      "tempC": 7
+      "tempC": 7.2
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-06T02:42:00Z",
+      "time": "2026-11-06T03:42:00Z",
       "gustHour": true,
-      "wind": 6,
-      "dir": 110,
-      "gust": 7,
-      "tempC": 6.9
+      "wind": 4,
+      "dir": 130,
+      "gust": 8,
+      "tempC": 7.3
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-06T02:42:00Z",
+      "time": "2026-11-06T03:42:00Z",
       "gustHour": true,
-      "wind": 1,
-      "dir": 60,
+      "wind": 4,
+      "dir": 140,
       "gust": 4,
-      "tempC": 3.9
+      "tempC": 4.4
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-06T02:42:00Z",
+      "time": "2026-11-06T03:42:00Z",
       "gustHour": true,
-      "wind": 4,
-      "dir": 120,
+      "wind": 6,
+      "dir": 160,
       "gust": 6,
-      "tempC": 6.5
+      "tempC": 6
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-06T02:36:00Z",
+      "time": "2026-11-06T03:36:00Z",
       "gustHour": true,
-      "wind": 6,
-      "dir": 150,
-      "gust": 4,
-      "tempC": 5.6
+      "wind": 2,
+      "dir": 130,
+      "gust": 6,
+      "tempC": 5.8
     }
   ]
 }
