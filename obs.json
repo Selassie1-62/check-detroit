@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-06T16:20:57.246Z",
+  "updatedAt": "2026-11-06T17:22:19.283Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-06T16:12:00Z",
+      "time": "2026-11-06T17:18:00Z",
       "gustHour": true,
-      "wind": 4,
-      "dir": 150,
-      "gust": 3,
-      "tempC": 9.5
+      "wind": 2,
+      "dir": 200,
+      "gust": 4,
+      "tempC": 9.3
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-06T16:12:00Z",
+      "time": "2026-11-06T17:18:00Z",
       "gustHour": true,
-      "wind": 1,
-      "dir": 240,
-      "gust": 4,
-      "tempC": 9.4
+      "wind": 2,
+      "dir": 100,
+      "gust": 3,
+      "tempC": 9.3
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-06T16:12:00Z",
+      "time": "2026-11-06T17:18:00Z",
       "gustHour": true,
-      "wind": 4,
-      "dir": 210,
-      "gust": 3,
-      "tempC": 9.1
+      "wind": 3,
+      "dir": 220,
+      "gust": 4,
+      "tempC": 8.8
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-06T16:12:00Z",
+      "time": "2026-11-06T17:18:00Z",
       "gustHour": true,
-      "wind": 0,
-      "dir": 0,
-      "gust": 2,
-      "tempC": 9.6
+      "wind": 4,
+      "dir": 200,
+      "gust": 4,
+      "tempC": 9.1
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-06T16:06:00Z",
+      "time": "2026-11-06T17:12:00Z",
       "gustHour": true,
-      "wind": 1,
-      "dir": 160,
-      "gust": 3,
-      "tempC": 10
+      "wind": 3,
+      "dir": 140,
+      "gust": 2,
+      "tempC": 9.3
     }
   ]
 }
