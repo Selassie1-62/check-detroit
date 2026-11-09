@@ -8,6 +8,11 @@
 <meta name="theme-color" content="#10232e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Check Détroit">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* Mise en page : colonne unique façon carnet de bord, bouton Check en tête, verdicts puis fenêtres puis détail. */
@@ -84,6 +89,56 @@ a { color: var(--sea); }
 .note { color: var(--muted); font-size: .85rem; }
 .links { display: grid; gap: 6px; }
 section { display: grid; gap: 10px; }
+/* Homespot */
+.homepick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.homepick select { font-weight: 700; }
+.hero { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 16px; }
+.hero .spotname { font: 700 2.1rem/1 var(--display); margin: 0; }
+.hero .headline { display: grid; gap: 4px; }
+.big { font: 700 2.6rem/1 var(--display); letter-spacing: .01em; }
+.big.go { color: var(--go); } .big.maybe { color: var(--maybe); } .big.no { color: var(--no); }
+.hero .sub2 { color: var(--muted); }
+.live { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.tile { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; min-width: 0; }
+.tile .lab { grid-column: 1 / -1; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+.tile .val { font: 700 1.5rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.tile .more { color: var(--muted); font-size: .88rem; grid-column: 1 / -1; }
+.arrow { width: 38px; height: 38px; }
+.arrow circle { fill: none; stroke: var(--line); stroke-width: 2; }
+.arrow path { fill: var(--sea); }
+.next { border-left: 5px solid var(--no); padding: 6px 12px; border-radius: 4px; background: var(--no-bg); }
+.next.go { border-color: var(--go); background: var(--go-bg); } .next.maybe { border-color: var(--maybe); background: var(--maybe-bg); }
+.next b { font-family: var(--display); font-size: 1.15rem; }
+.strip { display: grid; gap: 4px; }
+.strip .day { display: grid; grid-template-columns: 50px repeat(16, 1fr); gap: 2px; align-items: center; }
+.strip .dname { font: 600 .9rem var(--display); color: var(--muted); white-space: nowrap; }
+.strip .hours { display: grid; grid-template-columns: 50px repeat(16, 1fr); gap: 2px; font-size: .68rem; color: var(--muted); text-align: center; }
+.cell { height: 30px; border: 0; border-radius: 4px; padding: 0; font: 700 .72rem var(--body); color: #fff; background: var(--no-bg); cursor: pointer; min-width: 0; }
+.cell.maybe { background: var(--maybe); } .cell.go { background: var(--go); }
+.cell.night { background: repeating-linear-gradient(135deg, var(--no-bg) 0 4px, transparent 4px 8px); cursor: default; }
+.cell.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell.nowc { box-shadow: inset 0 -3px 0 var(--ink); }
+.celldetail { font-size: .92rem; min-height: 1.4em; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+/* Carte */
+#map { height: min(62vh, 520px); border-radius: 12px; border: 1px solid var(--line); background: var(--card); z-index: 0; }
+.leaflet-container { font: 14px/1.35 var(--body); }
+.leaflet-popup-content { margin: 10px 12px; }
+.leaflet-popup-content h4 { margin: 0 0 4px; font: 700 1.1rem var(--display); }
+.mk { display: grid; justify-items: center; gap: 1px; pointer-events: auto; }
+#map.zlow .mk.spot:not(.home) .pill { display: none; }
+.mk.spot { display: flex; align-items: center; gap: 4px; justify-items: start; }
+.mk .warrow { width: 26px; height: 26px; }
+.mk .warrow circle { fill: rgba(16,35,46,.85); stroke: #fff; stroke-width: 2; }
+.mk .warrow path { fill: #fff; }
+.mk .pill { font: 700 11px/1 var(--body); padding: 3px 6px; border-radius: 999px; background: rgba(16,35,46,.88); color: #fff; white-space: nowrap; }
+.mk.buoy .dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #4cc283; background: #fff; }
+.mk.spot .dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; background: var(--no); box-shadow: 0 0 0 1px rgba(0,0,0,.3); }
+.mk.spot.go .dot { background: var(--go); } .mk.spot.maybe .dot { background: var(--maybe); }
+.mk.home .dot { width: 24px; height: 24px; }
+.maplegend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--sea); font: inherit; text-decoration: underline; cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) { button.check:not([disabled]):active { transform: scale(.98); } }
 </style>
 </head>
@@ -96,6 +151,7 @@ section { display: grid; gap: 10px; }
     </div>
     <div class="checkrow">
       <button class="check" id="check" type="button">Check</button>
+      <div class="homepick"><label for="home">Mon spot</label><select id="home"></select></div>
       <div class="status">
         <div id="status">Appuie sur Check pour interroger les 8 modèles.</div>
         <div class="models" id="models"></div>
@@ -103,9 +159,25 @@ section { display: grid; gap: 10px; }
     </div>
   </header>
 
+  <section aria-labelledby="h-home">
+    <h2 id="h-home" class="visually-hidden" style="position:absolute;left:-9999px">Mon spot</h2>
+    <div class="hero" id="hero"><div class="empty">Ton spot s'affichera ici dès que le Check sera terminé.</div></div>
+  </section>
+
+  <section aria-labelledby="h-map">
+    <h2 id="h-map">Carte du détroit</h2>
+    <div id="map" role="region" aria-label="Carte interactive des spots, bouées et sémaphores"></div>
+    <div class="maplegend">
+      <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--go)"></i> spot GO</span>
+      <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--maybe)"></i> limite</span>
+      <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--no)"></i> rien</span>
+      <span>○ bouée · ➤ vent mesuré (la flèche va dans le sens du vent) · pointillés : parcours de downwind jouables</span>
+    </div>
+  </section>
+
   <section aria-labelledby="h-now">
-    <h2 id="h-now">Maintenant</h2>
-    <div class="grid" id="now"><div class="empty">Les conditions actuelles des six zones s'afficheront ici.</div></div>
+    <h2 id="h-now">Tous les spots maintenant</h2>
+    <div class="grid" id="now"><div class="empty">Les conditions actuelles des sept zones s'afficheront ici.</div></div>
   </section>
 
   <section aria-labelledby="h-buoy">
@@ -129,6 +201,15 @@ section { display: grid; gap: 10px; }
     <div class="wins" id="wins"><div class="empty">Les créneaux jouables de jour, avec le support conseillé, s'afficheront ici.</div></div>
   </section>
 
+  <section aria-labelledby="h-tide">
+    <h2 id="h-tide">Marée officielle · SHOM</h2>
+    <div class="grid">
+      <div class="card"><h3>Boulogne-sur-Mer</h3><script src="https://services.data.shom.fr/hdm/vignette/grande/BOULOGNE-SUR-MER?locale=fr"></script></div>
+      <div class="card"><h3>Calais</h3><script src="https://services.data.shom.fr/hdm/vignette/grande/CALAIS?locale=fr"></script></div>
+    </div>
+    <p class="note">Marée du jour fournie par le SHOM (vignette gratuite). Courants : <a href="https://diffusion.shom.fr/marees/courants-de-maree/atlas-de-courants-de-maree-2d-pas-de-calais.html" target="_blank" rel="noopener">atlas des courants de marée du Pas-de-Calais</a>.</p>
+  </section>
+
   <section aria-labelledby="h-det">
     <h2 id="h-det">Détail par modèle</h2>
     <div class="row">
@@ -149,6 +230,7 @@ section { display: grid; gap: 10px; }
       <a href="https://wavenet.cefas.co.uk/" target="_blank" rel="noopener">Cefas WaveNet : bouée de Hastings (Open Government Licence v3.0)</a>
       <span class="note">Hull et al. (2023). WaveNet near real-time data feed - from the past 48 hours. Cefas, UK. V1. <a href="https://doi.org/10.14466/CefasDataHub.142" target="_blank" rel="noopener">doi:10.14466/CefasDataHub.142</a> · <a href="https://data.cefas.co.uk/view/21682" target="_blank" rel="noopener">fiche des données</a></span>
       <a href="https://maree.shom.fr/harbor/BOULOGNE-SUR-MER/hlt/0" target="_blank" rel="noopener">Marées et coefficients SHOM (Boulogne-sur-Mer)</a>
+      <a href="https://diffusion.shom.fr/marees/courants-de-maree/atlas-de-courants-de-maree-2d-pas-de-calais.html" target="_blank" rel="noopener">Atlas des courants de marée SHOM (Pas-de-Calais)</a>
       <a href="https://www.windy.com/50.81/1.54" target="_blank" rel="noopener">Windy, Ambleteuse</a>
       <a href="https://www.windguru.cz/" target="_blank" rel="noopener">Windguru (AROME, WG)</a>
       <a href="https://portail-api.meteofrance.fr/" target="_blank" rel="noopener">Météo-France, données d'observation (sémaphores)</a>
@@ -159,10 +241,10 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, shoreType, compass, power, nowHour, wingSize } from "./logic.js";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js";
 
 const $ = (id) => document.getElementById(id);
-const state = { spots: null, days: null, wins: [], filter: "all", raw: null };
+const state = { spots: null, days: null, wins: [], filter: "all", raw: null, obs: null, buoys: null, sel: null };
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
@@ -177,6 +259,9 @@ $("kg").value = store.get("kg", 75);
 $("kg").addEventListener("change", () => { store.set("kg", +$("kg").value || 75); if (state.spots) refresh(); });
 SPOTS.forEach((s) => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.name; $("spot").append(o); });
 $("spot").value = store.get("spot", "wimereux");
+SPOTS.forEach((s) => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.short; $("home").append(o); });
+$("home").value = store.get("home", "wimereux");
+$("home").addEventListener("change", () => { store.set("home", $("home").value); state.sel = null; renderHero(); renderMap(); });
 $("spot").addEventListener("change", () => { store.set("spot", $("spot").value); renderDetail(); });
 document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
   state.filter = b.dataset.f;
@@ -207,7 +292,7 @@ $("check").addEventListener("click", check);
 function refresh() {
   const kg = +$("kg").value || 75;
   state.wins = analyse(state.spots, state.days, { weight: kg });
-  renderNow(kg); renderWins(); renderDetail();
+  renderNow(kg); renderWins(); renderDetail(); renderHero(); renderMap();
 }
 
 function verdict(level, text) { return `<span class="v ${level}">${text} · ${LBL[level]}</span>`; }
@@ -278,11 +363,178 @@ function renderDetail() {
   $("tides").textContent = tz.length ? "Marée (modèle, indicatif) : " + tz.map((x) => `${x.type === "PM" ? "pleine mer" : "basse mer"} ${fmtDay(x.t)} ${hh(x.t)}`).join(" · ") + ". Vérifie sur SHOM." : "";
 }
 
+const per = (L) => [L.Tpeak, L.Tz].find((x) => x != null && x <= 20) ?? null; // > 20 s : valeur aberrante (bateau-feu)
+// ---------- Homespot ----------
+// Sémaphores et bouées les plus utiles pour chaque spot.
+const STATIONS_FOR = { hardelot: ["touquet", "boulogne"], equihen: ["boulogne"], boulogne: ["boulogne"], wimereux: ["boulogne", "grisnez"],
+  wissant: ["grisnez", "calais"], sangatte: ["calais", "grisnez"], calais: ["calais", "dunkerque"] };
+const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], wimereux: ["HASTINGSWN", "62305"],
+  wissant: ["62304", "WGABBARD"], sangatte: ["62304", "WGABBARD"], calais: ["62304", "WGABBARD"] };
+// Flèche dans le sens où va le vent (provenance + 180°), avec le texte « vient du … » à côté pour lever toute ambiguïté.
+const arrowSvg = (from, cls = "arrow") => from == null ? "" :
+  `<svg class="${cls}" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="20"/><path transform="rotate(${(from + 180) % 360})" d="M0 16 L7 -2 L2 -2 L2 -16 L-2 -16 L-2 -2 L-7 -2 Z"/></svg>`;
+const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function kindText(x) {
+  if (x.kind === "wing") return `Wing${x.size ? " " + r1(x.size) + " m²" : ""}`;
+  if (x.kind === "downwind") return `${x.label}${x.support === "wing" ? " (wing)" : ""}`;
+  return "Prone";
+}
+
+function renderHero() {
+  const id = $("home").value, S = SPOTS.find((s) => s.id === id);
+  if (!S) return;
+  const kg = +$("kg").value || 75;
+  let headline = `<div class="big no">Check en cours…</div>`, next = "", strip = "";
+  if (state.spots) {
+    const h = nowHour(state.spots, id);
+    const e = evalHour(id, h, state.days, kg);
+    const goes = e.items.filter((x) => x.level !== "no").sort((a, b) => LV[b.level] - LV[a.level]);
+    if (!e.day) headline = `<div class="big no">Nuit</div><div class="sub2">Pas de session conseillée avant le lever du jour.</div>`;
+    else if (goes.length) headline = `<div class="big ${goes[0].level}">${goes[0].level === "go" ? "GO" : "Limite"} · ${esc(kindText(goes[0]))}</div>
+      <div class="sub2">${esc((goes[0].why || []).join(" · "))}${goes.length > 1 ? ` · aussi : ${goes.slice(1).map((x) => esc(kindText(x)) + " " + LBL[x.level].toLowerCase()).join(", ")}` : ""}</div>`;
+    else headline = `<div class="big no">Rien de jouable</div><div class="sub2">${esc((e.items[0].why || []).join(" · "))}</div>`;
+    // Prochain créneau sur ce spot
+    const mine = state.wins.filter((w) => w.spot === id && w.level !== "no");
+    const n = mine.find((w) => w.level === "go") || mine[0];
+    if (n) {
+      const same = n.start.slice(0, 10) === n.end.slice(0, 10);
+      const span = n.start === n.end ? "" : same ? "–" + hh(n.end) : " → " + fmtDay(n.end) + " " + hh(n.end);
+      next = `<div class="next ${n.level}"><b>Prochain créneau : ${fmtDay(n.start)} ${hh(n.start)}${span}</b>
+        · ${LBL[n.level]} · ${esc(n.label)}${n.kind === "downwind" ? " " + esc(n.where) : ""} · confiance ${n.conf}</div>`;
+    } else next = `<div class="next"><b>Aucun créneau jouable sur 3 jours</b> pour ${esc(S.short)}.</div>`;
+    strip = renderStrip(id, kg);
+  }
+  // Mesures en direct
+  const tiles = [];
+  const st = (state.obs?.stations || []).filter((x) => (STATIONS_FOR[id] || []).includes(x.key) && x.wind != null)
+    .sort((a, b) => STATIONS_FOR[id].indexOf(a.key) - STATIONS_FOR[id].indexOf(b.key));
+  st.forEach((x) => {
+    const age = Math.round((Date.now() - Date.parse(x.time)) / 60000);
+    const t = x.dir == null ? null : shoreType(x.dir, S.facing);
+    tiles.push(`<div class="tile"><span class="lab">Vent mesuré · ${esc(x.label)}</span>${arrowSvg(x.dir)}
+      <span><span class="val">${x.wind} nds</span><br><span>vient du ${compass(x.dir)}${x.gust != null ? ` · raf. ${x.gust}` : ""}</span></span>
+      <span class="more">${t ? `${t.label} à ${esc(S.short)} · ` : ""}${age > 90 ? "mesure ancienne" : `il y a ${age} min`}</span></div>`);
+  });
+  const bu = (state.buoys?.buoys || []).filter((b) => (BUOYS_FOR[id] || []).includes(b.id) && b.last && b.last.Hm0 != null && Date.now() - Date.parse(b.last.t) < 24 * 3600e3)
+    .sort((a, b) => BUOYS_FOR[id].indexOf(a.id) - BUOYS_FOR[id].indexOf(b.id));
+  bu.slice(0, 2).forEach((b) => {
+    const L = b.last, tp = per(L);
+    const ageH = (Date.now() - Date.parse(L.t)) / 3600e3;
+    const eta = tp ? Math.round((b.distKm / (0.78 * tp * 3.6)) * 10) / 10 : null;
+    tiles.push(`<div class="tile"><span class="lab">Bouée · ${esc(b.label)}</span>${arrowSvg(L.W_PDIR)}
+      <span><span class="val">${r1(L.Hm0)} m</span><br><span>${tp ? r1(tp) + " s" : "période —"}${L.W_PDIR != null ? ` · vient du ${compass(L.W_PDIR)}` : ""}</span></span>
+      <span class="more">${ageH > 3 ? `mesure d'il y a ${Math.round(ageH)} h · ` : ""}${eta && tp >= 8 ? `houle : arrive à la côte en ~${r1(eta)} h` : b.id === "62304" || b.id === "WGABBARD" ? "mer du Nord : en amont pour Calais et Wissant" : ""}</span></div>`);
+  });
+  if (state.spots) {
+    const tz = state.spots[id].tides.filter((x) => x.t >= nowHour(state.spots, id).t).slice(0, 2);
+    if (tz.length) tiles.push(`<div class="tile"><span class="lab">Marée (modèle, indicatif)</span>
+      <span class="val" style="grid-column:1/-1">${tz.map((x) => `${x.type} ${hh(x.t)}`).join(" · ")}</span>
+      <span class="more">${S.tide ? `Ce spot marche en ${esc(S.tide.label)}.` : "Heures exactes : vignette SHOM plus bas."}</span></div>`);
+  }
+  $("hero").innerHTML = `<div class="headline"><h3 class="spotname">${esc(S.short)}</h3><span class="sub2">${esc(S.name)}</span>${headline}</div>
+    ${tiles.length ? `<div class="live">${tiles.join("")}</div>` : ""}
+    ${next}${strip}`;
+  $("hero").querySelectorAll(".cell[data-t]").forEach((b) => b.addEventListener("click", () => { state.sel = b.dataset.t; renderHero(); }));
+}
+
+// Barre des 3 jours : une case par heure de 6 h à 21 h, couleur = meilleure discipline jouable.
+function renderStrip(id, kg) {
+  const H = state.spots[id].hours, nowT = nowHour(state.spots, id).t;
+  const days = [...new Set(H.map((h) => h.t.slice(0, 10)))].filter((d) => d >= nowT.slice(0, 10)).slice(0, 3);
+  const letter = { prone: "P", wing: "W", downwind: "D" };
+  let selInfo = "";
+  const rows = days.map((d) => {
+    const cells = [];
+    for (let k = 6; k <= 21; k++) {
+      const t = `${d}T${String(k).padStart(2, "0")}:00`;
+      const h = H.find((x) => x.t === t);
+      if (!h || t.slice(0, 13) < nowT.slice(0, 13)) { cells.push(`<span class="cell night" style="opacity:.35"></span>`); continue; }
+      const e = evalHour(id, h, state.days, kg);
+      const cls = !e.day ? "night" : e.level;
+      const label = e.day && e.level !== "no" ? letter[e.best.kind] : "";
+      const isSel = state.sel === t;
+      if (isSel) selInfo = `<b>${fmtDay(t)} ${hh(t)}</b> · ` + (e.day ? e.items.map((x) => `${esc(kindText(x))} : ${LBL[x.level]}`).join(" · ") + `<br><span class="note">${esc((e.best.why || []).join(" · "))}</span>` : "nuit");
+      cells.push(`<button type="button" class="cell ${cls}${isSel ? " sel" : ""}${t.slice(0, 13) === nowT.slice(0, 13) ? " nowc" : ""}" data-t="${t}" ${!e.day ? "disabled" : ""}
+        aria-label="${fmtDay(t)} ${hh(t)} : ${e.day ? LBL[e.level] + (label ? " " + kindText(e.best) : "") : "nuit"}">${label}</button>`);
+    }
+    return `<div class="day"><span class="dname">${fmtDay(d + "T12")}</span>${cells.join("")}</div>`;
+  });
+  const hours = `<div class="hours"><span></span>${Array.from({ length: 16 }, (_, k) => `<span>${(k + 6) % 3 === 0 ? k + 6 : ""}</span>`).join("")}</div>`;
+  return `<div class="strip">${hours}${rows.join("")}
+    <div class="legend"><span><i style="background:var(--go)"></i>GO</span><span><i style="background:var(--maybe)"></i>Limite</span><span><i style="background:var(--no-bg);border:1px solid var(--line)"></i>Rien</span><span>P prone · D downwind · W wing · touche une case pour le détail</span></div>
+    <div class="celldetail">${selInfo}</div></div>`;
+}
+
+// ---------- Carte ----------
+const BUOY_POS = { "62304": [51.103, 1.8], "62305": [50.4, 0.0], HASTINGSWN: [50.75, 0.75], WGABBARD: [51.98, 2.08] };
+const STATION_POS = { grisnez: [50.869, 1.584], boulogne: [50.734, 1.593], calais: [50.96, 1.952], dunkerque: [51.054, 2.34], touquet: [50.517, 1.62] };
+let map = null, layers = null;
+function renderMap() {
+  if (!window.L || !$("map")) return;
+  if (!map) {
+    map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).fitBounds([[50.6, 0.7], [51.15, 2.1]]);
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`, {
+      maxZoom: 14, subdomains: "abcd", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
+    layers = L.layerGroup().addTo(map);
+    const z = () => $("map").classList.toggle("zlow", map.getZoom() < 10);
+    map.on("zoomend", z); z();
+  }
+  layers.clearLayers();
+  const home = $("home").value, kg = +$("kg").value || 75;
+  const icon = (html, size = [60, 44], anchor) => L.divIcon({ html, className: "", iconSize: size, iconAnchor: anchor || [size[0] / 2, 13] });
+  // Parcours de downwind jouables maintenant
+  if (state.spots) RUNS.forEach((r) => {
+    const h = nowHour(state.spots, r.spot); if (!h || !r.line) return;
+    const e = evalHour(r.spot, h, state.days, kg).items.find((x) => x.run === r.id);
+    if (!e || e.level === "no") return;
+    L.polyline(r.line, { color: e.level === "go" ? "#2c8a57" : "#b9801a", weight: 4, dashArray: "8 8" })
+      .bindPopup(`<h4>${esc(r.name)}</h4>${LBL[e.level]} · ${esc((e.why || []).join(" · "))}`).addTo(layers);
+  });
+  // Spots
+  SPOTS.forEach((s) => {
+    let lvl = "no", pop = `<h4>${esc(s.name)}</h4>`;
+    if (state.spots) {
+      const e = evalHour(s.id, nowHour(state.spots, s.id), state.days, kg);
+      lvl = e.level;
+      pop += e.day ? e.items.map((x) => `${esc(kindText(x))} : <b>${LBL[x.level]}</b>`).join("<br>") + `<br><span class="note">${esc((e.best.why || []).join(" · "))}</span>` : "Nuit";
+      const n = state.wins.find((w) => w.spot === s.id && w.level === "go");
+      if (n) pop += `<br>Prochain GO : ${fmtDay(n.start)} ${hh(n.start)} (${esc(n.label)})`;
+    }
+    pop += `<br><button type="button" class="linkbtn" data-home="${s.id}">Afficher en grand</button>`;
+    L.marker([s.lat, s.lon], { icon: icon(`<div class="mk spot ${lvl}${s.id === home ? " home" : ""}"><span class="dot"></span><span class="pill">${esc(s.short)}</span></div>`, [110, 24], [s.id === home ? 12 : 9, 12]), zIndexOffset: s.id === home ? 1000 : 500 })
+      .bindPopup(pop).addTo(layers);
+  });
+  // Sémaphores
+  (state.obs?.stations || []).forEach((x) => {
+    const pos = STATION_POS[x.key]; if (!pos || x.wind == null) return;
+    L.marker(pos, { icon: icon(`<div class="mk">${arrowSvg(x.dir, "warrow")}<span class="pill">${x.wind}${x.gust != null ? "/" + x.gust : ""} nds</span></div>`, [70, 46]) })
+      .bindPopup(`<h4>${esc(x.label)}</h4>${x.wind} nds, rafales ${x.gust ?? "—"} nds<br>Vient du ${compass(x.dir)} (${x.dir ?? "—"}°)<br><span class="note">Météo-France · ${new Date(x.time).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>`).addTo(layers);
+  });
+  // Bouées
+  (state.buoys?.buoys || []).forEach((b) => {
+    const pos = b.lat != null ? [b.lat, b.lon] : BUOY_POS[b.id];
+    if (!b.last || !pos) return;
+    const L_ = b.last, tp = per(L_);
+    const txt = L_.Hm0 != null ? `${r1(L_.Hm0)} m${tp ? " · " + r0(tp) + " s" : ""}` : L_.wind != null ? `${L_.wind} nds` : "—";
+    L.marker(pos, { icon: icon(`<div class="mk buoy"><span class="dot"></span><span class="pill">${txt}</span></div>`, [90, 40], [45, 8]) })
+      .bindPopup(`<h4>${esc(b.label)}</h4>${L_.Hm0 != null ? `Hs ${r1(L_.Hm0)} m · période ${r1(tp)} s${L_.W_PDIR != null ? ` · vient du ${compass(L_.W_PDIR)}` : ""}<br>` : ""}${L_.wind != null ? `Vent ${L_.wind} nds du ${compass(L_.windDir)}<br>` : ""}<span class="note">${esc(b.note || "")}</span>`).addTo(layers);
+  });
+}
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest && ev.target.closest("[data-home]"); if (!b) return;
+  $("home").value = b.dataset.home; store.set("home", b.dataset.home); state.sel = null;
+  map && map.closePopup(); renderHero(); renderMap(); $("hero").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+renderHero(); renderMap();
+
 async function loadObs() {
   try {
     const r = await fetch("obs.json?" + Date.now(), { cache: "no-store" });
     if (!r.ok) return;
     const o = await r.json();
+    state.obs = o; renderHero(); renderMap();
     const now = Date.now();
     const cards = (o.stations || []).map((s) => {
       if (s.error || s.wind == null) return `<article class="card"><h3>${s.label}</h3><p class="note">Pas de mesure disponible.</p></article>`;
@@ -290,7 +542,7 @@ async function loadObs() {
       const old = age > 90;
       return `<article class="card"><h3>${s.label}</h3>
         <dl class="kv"><dt>Vent</dt><dd><strong>${s.wind} nds</strong> ${compass(s.dir)} (${s.dir ?? "—"}°)</dd>
-        <dt>Rafales</dt><dd>${s.gust ?? "—"} nds</dd>
+        <dt>Rafales</dt><dd>${s.gust ?? "—"} nds${s.gustHour ? " (max. sur l'heure)" : ""}</dd>
         <dt>Mesure</dt><dd>${new Date(s.time).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}${old ? " · ancienne" : ` · il y a ${age} min`}</dd></dl></article>`;
     });
     if (cards.length) $("obs").innerHTML = cards.join("");
@@ -303,6 +555,7 @@ async function loadBuoys() {
     const r = await fetch("bouees.json?" + Date.now(), { cache: "no-store" });
     if (!r.ok) return;
     const o = await r.json();
+    state.buoys = o; renderHero(); renderMap();
     const cards = (o.buoys || []).filter((b) => b.last).map((b) => {
       const L = b.last, S = b.series || [];
       const ref = S.find((x) => Date.parse(x.t) >= Date.parse(L.t) - 6 * 3600e3) || S[0];

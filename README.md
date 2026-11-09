@@ -10,12 +10,13 @@ ou de downwind apparaît.
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | La page, avec le bouton Check |
+| `index.html` | La page : bouton Check, **homespot** (spot choisi en grand, barre des 3 jours), **carte interactive** (Leaflet, fond CARTO/OpenStreetMap) |
+| `icon.png` | Icône pour l'écran d'accueil de l'iPhone |
 | `logic.js` | Récupération des modèles, consensus, seuils, fenêtres (partagé page + robot) |
 | `alert.mjs` | Le robot d'alertes |
 | `.github/workflows/alertes.yml` | Lance le robot toutes les 3 h |
 | `obs.mjs` + `.github/workflows/vent-mesure.yml` | Robot « Mesures » (toutes les 30 min) : vent des sémaphores → `obs.json` |
-| `bouees.mjs` | Lit la bouée de Hastings (Cefas WaveNet, sans clé) toutes les 30 min, écrit `bouees.json`, alerte « houle longue en approche » |
+| `bouees.mjs` | Lit Hastings, West Gabbard 2 et Scilly (Cefas WaveNet), Sandettie et Greenwich (NDBC) toutes les 30 min, écrit `bouees.json`. Alertes « houle longue en approche » et « Calais peut marcher » (mer de NE mesurée + vent faible ou de terre) |
 | `alerts-state.json` | Mémoire des alertes déjà envoyées (anti-doublon) |
 | `package.json` | Réglage technique pour Node |
 
@@ -64,14 +65,17 @@ remplace le secret `NTFY_TOPIC` et réabonne-toi dans l'app.
 
 ## Réglages
 - **Seuils** : en haut de `logic.js`, objet `THRESHOLDS` (puissance prone, vent mini paddle/wing, rafales max…).
-- **Spots** : Hardelot, Équihen · Le Portel, Boulogne, Wimereux, Wissant, Sangatte · Calais. Le port de Boulogne n'est jamais traversé par un parcours de downwind.
+- **Spots** : Hardelot, Équihen · Le Portel, Boulogne, Wimereux, Wissant, Sangatte, Calais. Calais a son propre mode « mer du vent » (mer de N à E, périodes courtes) et une fenêtre de marée (PM −3 h → PM +1 h), calés sur la session du jeudi 05/11/2026 à 8 h.
+- **Mon spot** : choisi en haut de la page, mémorisé sur chaque téléphone (Wimereux par défaut). Le port de Boulogne n'est jamais traversé par un parcours de downwind.
 - **Spots et parcours** : `SPOTS` et `RUNS` dans `logic.js` (orientation de la côte, secteurs de vent autorisés).
 - **Poids des modèles** : `weight` dans `WIND_MODELS` / `WAVE_MODELS`.
 - **Types d'alertes** : variable `ALERT_KINDS` (par défaut `prone,downwind` ; ajouter `wing` pour être alerté de chaque jour de vent).
 
 ## Limites connues
-- Les marées viennent du modèle Open-Meteo : indicatives, à vérifier sur SHOM. Pas de coefficient.
+- Marées : vignettes officielles SHOM (gratuites) pour Boulogne et Calais ; la courbe horaire du tableau vient du modèle Open-Meteo (indicative). L'API SHOM est payante (4 600 €/an, réponse du 06/11/2026).
 - Bouée GeoDunes d'Ambleteuse : pas d'accès automatisé sans contribution financière (réponse GeoDunes du 03/11/2026). Consultation manuelle via le lien.
 - MARC (Ifremer) : simple lien dans la page. Ses données sont réservées à un usage personnel, sans rediffusion ; une intégration automatique demande l'accord d'Ifremer (formulaire http://forms.ifremer.fr/lops-oc/marc-ww3/).
+- Seuils de Calais calés sur une seule session (05/11/2026) : à affiner avec les prochaines.
+- Bouée de Scilly : utilisée seulement si elle est présente dans le flux Cefas (le journal du robot liste les bouées disponibles).
 - Les modèles ratent souvent la houle longue : le site peut sous-estimer une session de prone. La bouée prime.
 - Données Open-Meteo gratuites pour un usage **non commercial**, avec attribution (affichée en bas de page).

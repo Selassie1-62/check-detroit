@@ -75,7 +75,7 @@ for (const s of list) {
     if (last && !process.env.OBS_KEYS_LOGGED) { console.log("Champs fournis :", Object.keys(last).join(", ")); process.env.OBS_KEYS_LOGGED = "1"; }
     if (!last) { out.stations.push({ ...s, error: "pas de mesure de vent" }); continue; }
     // Les mesures 6 min ne donnent pas toujours les rafales : on complète avec la mesure horaire.
-    const gustOf = (o) => { const g = o.fxi10 ?? o.fxi ?? o.fxi3s ?? o.fxy; return g != null ? Math.round(g * KT) : null; };
+    const gustOf = (o) => { const g = o.raf10 ?? o.fxi10 ?? o.fxi ?? o.fxi3s ?? o.fxy; return g != null ? Math.round(g * KT) : null; };
     let gust = gustOf(last), gustHour = false;
     if (gust == null) {
       try {
