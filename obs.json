@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-09T22:41:41.105Z",
+  "updatedAt": "2026-11-09T23:36:27.369Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,45 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-09T22:36:00Z",
+      "time": "2026-11-09T23:30:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 100,
+      "wind": 13,
+      "dir": 90,
       "gust": 16,
-      "tempC": 5.1
+      "tempC": 5.2
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-09T23:30:00Z",
+      "gustHour": false,
+      "wind": 8,
+      "dir": 100,
+      "gust": 15,
+      "tempC": 5.5
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-09T22:36:00Z",
+      "time": "2026-11-09T23:30:00Z",
       "gustHour": false,
       "wind": 7,
-      "dir": 90,
+      "dir": 100,
       "gust": 9,
-      "tempC": 3.4
+      "tempC": 3.2
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-09T23:30:00Z",
+      "gustHour": false,
+      "wind": 8,
+      "dir": 90,
+      "gust": 10,
+      "tempC": 7
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "error": "Aucun accès ne fonctionne :\n  500 Obs/v2 apikey json {\"code\":\"303001\",\"type\":\"Status report\",\"message\":\"Runtime Error\",\""
+      "time": "2026-11-09T23:24:00Z",
+      "gustHour": false,
+      "wind": 10,
+      "dir": 80,
+      "gust": 15,
+      "tempC": 5.1
     }
   ]
 }
