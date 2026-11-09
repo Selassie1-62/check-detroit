@@ -88,6 +88,7 @@ input[type=number] { width: 5.5em; }
 a { color: var(--sea); }
 .note { color: var(--muted); font-size: .85rem; }
 .links { display: grid; gap: 6px; }
+iframe.shom { width: 100%; height: 330px; border: 0; background: #fff; border-radius: 8px; }
 section { display: grid; gap: 10px; }
 /* Homespot */
 .homepick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -204,8 +205,8 @@ section { display: grid; gap: 10px; }
   <section aria-labelledby="h-tide">
     <h2 id="h-tide">Marée officielle · SHOM</h2>
     <div class="grid">
-      <div class="card"><h3>Boulogne-sur-Mer</h3><script src="https://services.data.shom.fr/hdm/vignette/grande/BOULOGNE-SUR-MER?locale=fr"></script></div>
-      <div class="card"><h3>Calais</h3><script src="https://services.data.shom.fr/hdm/vignette/grande/CALAIS?locale=fr"></script></div>
+      <div class="card"><h3>Boulogne-sur-Mer</h3><iframe class="shom" title="Marée SHOM Boulogne-sur-Mer" loading="lazy" data-port="BOULOGNE-SUR-MER"></iframe></div>
+      <div class="card"><h3>Calais</h3><iframe class="shom" title="Marée SHOM Calais" loading="lazy" data-port="CALAIS"></iframe></div>
     </div>
     <p class="note">Marée du jour fournie par le SHOM (vignette gratuite). Courants : <a href="https://diffusion.shom.fr/marees/courants-de-maree/atlas-de-courants-de-maree-2d-pas-de-calais.html" target="_blank" rel="noopener">atlas des courants de marée du Pas-de-Calais</a>.</p>
   </section>
@@ -241,7 +242,12 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=3";
+
+// Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
+document.querySelectorAll("iframe.shom").forEach((f) => {
+  f.srcdoc = `<!doctype html><meta charset="utf-8"><body style="margin:0;font-family:sans-serif"><script src="https://services.data.shom.fr/hdm/vignette/grande/${f.dataset.port}?locale=fr"><\/script></body>`;
+});
 
 const $ = (id) => document.getElementById(id);
 const state = { spots: null, days: null, wins: [], filter: "all", raw: null, obs: null, buoys: null, sel: null };
@@ -527,7 +533,7 @@ document.addEventListener("click", (ev) => {
   $("home").value = b.dataset.home; store.set("home", b.dataset.home); state.sel = null;
   map && map.closePopup(); renderHero(); renderMap(); $("hero").scrollIntoView({ behavior: "smooth", block: "start" });
 });
-renderHero(); renderMap();
+try { renderHero(); renderMap(); } catch (e) { console.error(e); }
 
 async function loadObs() {
   try {
