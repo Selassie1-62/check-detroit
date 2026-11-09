@@ -7,17 +7,22 @@ export const SPOTS = [
   { id: "boulogne", name: "Boulogne-sur-Mer", short: "Boulogne", lat: 50.735, lon: 1.55, facing: 290 },
   { id: "wimereux", name: "Wimereux · Ambleteuse · Audresselles", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270 },
   { id: "wissant", name: "Wissant · Tardinghen", short: "Wissant", lat: 50.92, lon: 1.64, facing: 315 },
-  { id: "sangatte", name: "Sangatte · Blériot · Calais", short: "Calais", lat: 50.98, lon: 1.78, facing: 335 },
+  { id: "sangatte", name: "Sangatte · Blériot", short: "Sangatte", lat: 50.98, lon: 1.78, facing: 335 },
+  // Calais vit de la mer du vent de mer du Nord (N à E), pas de la houle atlantique, et marche en fin de montant.
+  // Calage : jeudi 05/11/2026 8 h, ça surfait (Sandettie 0,9 m · West Gabbard 1,7 m / 6 s ENE · Hastings 0,9 m / 6,3 s ENE · vent E 5-10 nds).
+  { id: "calais", name: "Calais · digue et plage", short: "Calais", lat: 50.985, lon: 1.84, facing: 345,
+    windsea: { sector: [300, 95], goHs: 0.7, goT: 4.5, maybeHs: 0.5, maybeT: 4, sideMax: 14 },
+    tide: { from: -180, to: 60, label: "fin du montant (PM −3 h → PM +1 h)" } },
 ];
 
 // Parcours de downwind : sens du vent acceptable (provenance, degrés) et côte longée.
 export const RUNS = [
-  { id: "gn-sangatte", name: "Gris-Nez → Sangatte", spot: "wissant", facing: 315, wind: [195, 285], ideal: [215, 255], km: 14 },
-  { id: "sangatte-wissant", name: "Sangatte / Escalles → Wissant", spot: "wissant", facing: 315, wind: [320, 50], ideal: [340, 25], km: 10 },
-  { id: "wimereux-audresselles", name: "Wimereux → Audresselles", spot: "wimereux", facing: 270, wind: [165, 235], ideal: [180, 215], km: 8 },
-  { id: "hardelot-portel", name: "Hardelot → Le Portel", spot: "equihen", facing: 270, wind: [165, 235], ideal: [180, 215], km: 8 },
-  { id: "portel-hardelot", name: "Le Portel → Hardelot", spot: "equihen", facing: 270, wind: [310, 20], ideal: [330, 5], km: 8 },
-  { id: "audresselles-wimereux", name: "Audresselles → Wimereux", spot: "wimereux", facing: 270, wind: [310, 20], ideal: [330, 5], km: 8 },
+  { id: "gn-sangatte", name: "Gris-Nez → Sangatte", spot: "wissant", facing: 315, wind: [195, 285], ideal: [215, 255], km: 14, line: [[50.872, 1.575], [50.93, 1.70], [50.962, 1.76]] },
+  { id: "sangatte-wissant", name: "Sangatte / Escalles → Wissant", spot: "wissant", facing: 315, wind: [320, 50], ideal: [340, 25], km: 10, line: [[50.94, 1.725], [50.915, 1.68], [50.895, 1.645]] },
+  { id: "wimereux-audresselles", name: "Wimereux → Audresselles", spot: "wimereux", facing: 270, wind: [165, 235], ideal: [180, 215], km: 8, line: [[50.77, 1.592], [50.80, 1.588], [50.826, 1.583]] },
+  { id: "hardelot-portel", name: "Hardelot → Le Portel", spot: "equihen", facing: 270, wind: [165, 235], ideal: [180, 215], km: 8, line: [[50.635, 1.565], [50.675, 1.555], [50.708, 1.555]] },
+  { id: "portel-hardelot", name: "Le Portel → Hardelot", spot: "equihen", facing: 270, wind: [310, 20], ideal: [330, 5], km: 8, line: [[50.708, 1.555], [50.675, 1.555], [50.635, 1.565]] },
+  { id: "audresselles-wimereux", name: "Audresselles → Wimereux", spot: "wimereux", facing: 270, wind: [310, 20], ideal: [330, 5], km: 8, line: [[50.826, 1.583], [50.80, 1.588], [50.77, 1.592]] },
 ];
 
 // Modèles et poids (tirés des comparaisons avec la bouée d'Ambleteuse, octobre 2026).
@@ -46,7 +51,7 @@ const SEA_VARS = "sea_level_height_msl,sea_surface_temperature";
 
 // ---------- utilitaires ----------
 export const angDiff = (a, b) => { const d = Math.abs(((a - b) % 360 + 540) % 360 - 180); return d; };
-const inRange = (dir, [a, b]) => (a <= b ? dir >= a && dir <= b : dir >= a || dir <= b);
+export const inRange = (dir, [a, b]) => (a <= b ? dir >= a && dir <= b : dir >= a || dir <= b);
 export const power = (hs, t) => 0.49 * hs * hs * t; // kW/m
 const round = (x, n = 1) => (x == null || Number.isNaN(x) ? null : Math.round(x * 10 ** n) / 10 ** n);
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
@@ -150,7 +155,7 @@ export function buildHours(raw) {
       const V = (f) => v.map((m) => ({ v: h.wave[m.key][f], w: m.weight }));
       h.c = {
         wind: wmean(W("s")), gust: wmean(W("g")), wdir: wdir(W("d")),
-        hs: wmean(V("hs")), tm: wmean(V("t")),
+        hs: wmean(V("hs")), tm: wmean(V("t")), wd: wdir(V("dir")),
         wwh: wmean(V("wwh")), wwp: wmean(V("wwp")), wwd: wdir(V("wwd")),
         swh: wmean(V("swh")), swp: wmean(V("swp")), swd: wdir(V("swd")),
         nWind: w.length, nWave: v.length,
@@ -158,7 +163,16 @@ export function buildHours(raw) {
       };
       return h;
     });
-    spots[s.id] = { spot: s, hours, tides: tideExtremes(hours) };
+    const tides = tideExtremes(hours);
+    // Minutes par rapport à la pleine mer la plus proche (négatif = avant la PM, pendant le montant).
+    const pms = tides.filter((x) => x.type === "PM").map((x) => Date.parse(x.t + ":00Z"));
+    hours.forEach((h) => {
+      if (!pms.length) return;
+      const t = Date.parse(h.t + ":00Z");
+      const near = pms.reduce((m, p) => (Math.abs(p - t) < Math.abs(m - t) ? p : m));
+      if (Math.abs(near - t) <= 7 * 3600e3) h.c.pmMin = Math.round((t - near) / 60000);
+    });
+    spots[s.id] = { spot: s, hours, tides };
   });
   return spots;
 }
@@ -194,6 +208,7 @@ const confidence = (c) => {
 };
 
 export function evalProne(c, spot) {
+  if (spot.windsea) return evalProneWindsea(c, spot);
   const swh = c.swh ?? 0, swp = c.swp ?? c.tm ?? 0, swd = c.swd ?? c.wwd;
   const exp = swd == null ? 0.6 : (() => { const d = angDiff(swd, spot.facing); return d <= 45 ? 1 : d <= 75 ? 0.6 : d <= 100 ? 0.25 : 0; })();
   const heff = swh * exp, P = power(heff, swp);
@@ -209,6 +224,32 @@ export function evalProne(c, spot) {
   if (heff > T.maxHs) why.push("trop gros");
   return { level, score: Math.min(100, Math.round((P / 3) * 60 + (clean ? 30 : 0) + Math.min(10, swp))), P: round(P), heff: round(heff), swp: round(swp, 0), why };
 }
+
+// Spots de mer du vent (Calais) : mer totale (houle + mer du vent) venant du secteur N à E, périodes courtes acceptées,
+// et seulement dans la fenêtre de marée du spot.
+function evalProneWindsea(c, spot) {
+  const Z = spot.windsea;
+  const hs = c.hs ?? 0, tm = c.tm ?? 0, d = c.wd ?? c.wwd ?? c.swd;
+  const exp = d == null ? 0.6 : inRange(d, Z.sector) ? 1 : 0.3;
+  const heff = hs * exp, P = power(heff, tm);
+  const st = c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
+  const w = c.wind ?? 0;
+  const clean = w < 8 || ((st.key === "off" || st.key === "sideoff") && w <= 18) || (st.key === "side" && w <= Z.sideMax);
+  const messy = (st.key === "on" || st.key === "sideon") && w >= 14;
+  let level = "no";
+  if (heff >= Z.goHs && tm >= Z.goT && clean && heff <= THRESHOLDS.prone.maxHs) level = "go";
+  else if (heff >= Z.maybeHs && tm >= Z.maybeT && !messy) level = "maybe";
+  const why = [`mer ${round(heff)} m · ${round(tm, 1)} s ${compass(d)}`, `vent ${round(w, 0)} nds ${st.label || ""}`.trim()];
+  if (messy) why.push("trop haché");
+  if (spot.tide && level !== "no") {
+    if (c.pmMin == null) why.push("marée inconnue");
+    else if (c.pmMin < spot.tide.from || c.pmMin > spot.tide.to) { level = "no"; why.push(`hors marée : vise la ${spot.tide.label}`); }
+    else why.push(c.pmMin < 0 ? `PM dans ${fmtMin(-c.pmMin)}` : `PM il y a ${fmtMin(c.pmMin)}`);
+  }
+  const score = level === "no" ? 0 : Math.min(100, Math.round(heff * 50 + (clean ? 30 : 0) + Math.min(10, tm)));
+  return { level, score, P: round(P), heff: round(heff), swp: round(tm, 1), why };
+}
+const fmtMin = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? String(m % 60).padStart(2, "0") : ""}` : `${m} min`);
 
 export function evalDownwind(c, run) {
   const T = THRESHOLDS.downwind;
@@ -248,8 +289,21 @@ export const wingSize = (kt, kg = 75) => {
   return Math.round(a * 2) / 2;
 };
 
+// Toutes les disciplines d'un spot pour une heure donnée (homespot, barre des 3 jours, carte).
+export function evalHour(spotId, h, days, weight = 75) {
+  const s = SPOTS.find((x) => x.id === spotId);
+  const day = isDay(h.t, days);
+  const items = [
+    { kind: "prone", label: "Prone", ...evalProne(h.c, s) },
+    { kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) },
+    ...RUNS.filter((r) => r.spot === spotId).map((r) => ({ kind: "downwind", label: `Downwind ${r.name}`, run: r.id, ...evalDownwind(h.c, r) })),
+  ].map((x) => (day ? x : { ...x, level: "no" }));
+  const best = items.reduce((m, x) => (LV[x.level] > LV[m.level] || (LV[x.level] === LV[m.level] && (x.score ?? 0) > (m.score ?? 0)) ? x : m), items[0]);
+  return { day, items, best, level: best.level };
+}
+
 // ---------- fenêtres ----------
-const LV = { no: 0, maybe: 1, go: 2 };
+export const LV = { no: 0, maybe: 1, go: 2 };
 function windowsFrom(hours, evalFn, meta, days, nowIso, endIso) {
   const out = []; let cur = null;
   const end = endIso.slice(0, 13);
