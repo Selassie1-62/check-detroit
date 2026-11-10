@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-10T05:50:29.167Z",
+  "updatedAt": "2026-11-10T06:58:51.641Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-10T05:42:00Z",
+      "time": "2026-11-10T06:54:00Z",
       "gustHour": false,
-      "wind": 13,
-      "dir": 70,
-      "gust": 17,
-      "tempC": 4
+      "wind": 8,
+      "dir": 80,
+      "gust": 12,
+      "tempC": 3.8
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-10T05:42:00Z",
+      "time": "2026-11-10T06:54:00Z",
       "gustHour": false,
-      "wind": 7,
-      "dir": 110,
-      "gust": 14,
-      "tempC": 5.2
+      "wind": 14,
+      "dir": 90,
+      "gust": 22,
+      "tempC": 5.4
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-10T05:42:00Z",
+      "time": "2026-11-10T06:54:00Z",
       "gustHour": false,
       "wind": 7,
-      "dir": 100,
-      "gust": 9,
-      "tempC": 1.8
+      "dir": 110,
+      "gust": 8,
+      "tempC": 1.3
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-10T05:42:00Z",
+      "time": "2026-11-10T06:54:00Z",
       "gustHour": false,
       "wind": 9,
-      "dir": 100,
+      "dir": 90,
       "gust": 12,
-      "tempC": 4.2
+      "tempC": 3.5
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-10T05:36:00Z",
+      "time": "2026-11-10T06:48:00Z",
       "gustHour": false,
-      "wind": 9,
-      "dir": 100,
-      "gust": 12,
-      "tempC": 6.2
+      "wind": 11,
+      "dir": 90,
+      "gust": 16,
+      "tempC": 6.3
     }
   ]
 }
