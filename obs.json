@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-10T16:47:25.582Z",
+  "updatedAt": "2026-11-10T17:44:30.605Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,23 +7,23 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-10T16:42:00Z",
+      "time": "2026-11-10T17:36:00Z",
       "gustHour": false,
-      "wind": 15,
-      "dir": 90,
-      "gust": 21,
-      "tempC": 6.5
+      "wind": 12,
+      "dir": 80,
+      "gust": 16,
+      "tempC": 6.6
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-10T16:42:00Z",
+      "time": "2026-11-10T17:36:00Z",
       "gustHour": false,
-      "wind": 11,
-      "dir": 80,
-      "gust": 21,
+      "wind": 6,
+      "dir": 120,
+      "gust": 12,
       "tempC": 6.8
     },
     {
@@ -31,36 +31,36 @@
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-10T16:42:00Z",
+      "time": "2026-11-10T17:36:00Z",
       "gustHour": false,
-      "wind": 9,
-      "dir": 110,
-      "gust": 11,
-      "tempC": 7.5
+      "wind": 11,
+      "dir": 100,
+      "gust": 15,
+      "tempC": 6.9
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-10T16:42:00Z",
+      "time": "2026-11-10T17:36:00Z",
       "gustHour": false,
-      "wind": 11,
-      "dir": 90,
-      "gust": 16,
-      "tempC": 8.7
+      "wind": 12,
+      "dir": 100,
+      "gust": 15,
+      "tempC": 8.5
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-10T16:36:00Z",
+      "time": "2026-11-10T17:30:00Z",
       "gustHour": false,
-      "wind": 12,
+      "wind": 13,
       "dir": 110,
-      "gust": 16,
-      "tempC": 7.7
+      "gust": 18,
+      "tempC": 7.9
     }
   ]
 }
