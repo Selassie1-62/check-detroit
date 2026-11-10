@@ -8,8 +8,7 @@
 <meta name="theme-color" content="#10232e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Check Détroit">
@@ -128,7 +127,9 @@ section { display: grid; gap: 10px; }
 .leaflet-popup-content { margin: 10px 12px; }
 .leaflet-popup-content h4 { margin: 0 0 4px; font: 700 1.1rem var(--display); }
 .mk { display: grid; justify-items: center; gap: 1px; pointer-events: auto; }
-#map.zlow .mk.spot:not(.home) .pill { display: none; }
+#map.zlow .mk.spot:not(.home) .pill, #map.zlow .mk.wind .pill { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); } }
+:root[data-theme="dark"] #map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 .mk.spot { display: flex; align-items: center; gap: 4px; justify-items: start; }
 .mk .warrow { width: 26px; height: 26px; }
 .mk .warrow circle { fill: rgba(16,35,46,.85); stroke: #fff; stroke-width: 2; }
@@ -172,7 +173,7 @@ section { display: grid; gap: 10px; }
       <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--go)"></i> spot GO</span>
       <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--maybe)"></i> limite</span>
       <span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--no)"></i> rien</span>
-      <span>○ bouée · ➤ vent mesuré (la flèche va dans le sens du vent) · pointillés : parcours de downwind jouables</span>
+      <span>○ bouée · ➤ vent mesuré (la flèche va dans le sens du vent) · pointillés : parcours de downwind jouables · zoome pour voir les noms et les vitesses</span>
     </div>
   </section>
 
@@ -242,7 +243,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=3";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=4";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -476,13 +477,23 @@ function renderStrip(id, kg) {
 const BUOY_POS = { "62304": [51.103, 1.8], "62305": [50.4, 0.0], HASTINGSWN: [50.75, 0.75], WGABBARD: [51.98, 2.08] };
 const STATION_POS = { grisnez: [50.869, 1.584], boulogne: [50.734, 1.593], calais: [50.96, 1.952], dunkerque: [51.054, 2.34], touquet: [50.517, 1.62] };
 let map = null, layers = null;
+// Leaflet (carte) chargé à part : si le serveur ne répond pas, seule la carte manque.
+let leafletLoading = false;
+function loadLeaflet() {
+  if (leafletLoading) return; leafletLoading = true;
+  const urls = ["https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"];
+  const tryNext = () => { const u = urls.shift(); if (!u) { $("map").innerHTML = '<div class="empty">Carte indisponible pour le moment.</div>'; return; }
+    const sc = document.createElement("script"); sc.src = u; sc.onload = () => renderMap(); sc.onerror = tryNext; document.head.append(sc); };
+  tryNext();
+}
 function renderMap() {
-  if (!window.L || !$("map")) return;
+  if (!$("map")) return;
+  if (!window.L) { loadLeaflet(); return; }
   if (!map) {
     map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).fitBounds([[50.6, 0.7], [51.15, 2.1]]);
-    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`, {
-      maxZoom: 14, subdomains: "abcd", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
+    // Fond OpenStreetMap (gratuit, sans clé) ; assombri par filtre en mode sombre.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 15, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
     layers = L.layerGroup().addTo(map);
     const z = () => $("map").classList.toggle("zlow", map.getZoom() < 10);
     map.on("zoomend", z); z();
@@ -515,7 +526,7 @@ function renderMap() {
   // Sémaphores
   (state.obs?.stations || []).forEach((x) => {
     const pos = STATION_POS[x.key]; if (!pos || x.wind == null) return;
-    L.marker(pos, { icon: icon(`<div class="mk">${arrowSvg(x.dir, "warrow")}<span class="pill">${x.wind}${x.gust != null ? "/" + x.gust : ""} nds</span></div>`, [70, 46]) })
+    L.marker(pos, { icon: icon(`<div class="mk wind">${arrowSvg(x.dir, "warrow")}<span class="pill">${x.wind}${x.gust != null ? "/" + x.gust : ""} nds</span></div>`, [70, 46]) })
       .bindPopup(`<h4>${esc(x.label)}</h4>${x.wind} nds, rafales ${x.gust ?? "—"} nds<br>Vient du ${compass(x.dir)} (${x.dir ?? "—"}°)<br><span class="note">Météo-France · ${new Date(x.time).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>`).addTo(layers);
   });
   // Bouées

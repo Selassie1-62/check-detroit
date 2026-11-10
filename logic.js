@@ -220,7 +220,7 @@ export function evalProne(c, spot) {
   let level = "no";
   if (P >= T.goPower && swp >= T.goPeriod && clean && heff <= T.maxHs) level = "go";
   else if (P >= T.maybePower && swp >= T.maybePeriod && !messy && heff <= T.maxHs + 0.5) level = "maybe";
-  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${st.label || ""}`.trim()];
+  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (heff > T.maxHs) why.push("trop gros");
   return { level, score: Math.min(100, Math.round((P / 3) * 60 + (clean ? 30 : 0) + Math.min(10, swp))), P: round(P), heff: round(heff), swp: round(swp, 0), why };
 }
@@ -239,7 +239,7 @@ function evalProneWindsea(c, spot) {
   let level = "no";
   if (heff >= Z.goHs && tm >= Z.goT && clean && heff <= THRESHOLDS.prone.maxHs) level = "go";
   else if (heff >= Z.maybeHs && tm >= Z.maybeT && !messy) level = "maybe";
-  const why = [`mer ${round(heff)} m · ${round(tm, 1)} s ${compass(d)}`, `vent ${round(w, 0)} nds ${st.label || ""}`.trim()];
+  const why = [`mer ${round(heff)} m · ${round(tm, 1)} s ${compass(d)}`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (messy) why.push("trop haché");
   if (spot.tide && level !== "no") {
     if (c.pmMin == null) why.push("marée inconnue");
