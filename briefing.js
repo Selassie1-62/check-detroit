@@ -1,7 +1,7 @@
 // Beach marshal : le briefing des 3 prochaines heures, juste avant de se mettre à l'eau.
 // Sources : AROME HD (Météo-France, pas de 15 min) via Open-Meteo pour le vent, les rafales et les averses ;
 // marée et température de l'eau du Check ; vent mesuré aux sémaphores pour juger si la prévision colle à la réalité.
-import { compass, shoreType, angDiff, toLocalIso, wingSize } from "./logic.js?v=7";
+import { compass, shoreType, angDiff, toLocalIso, wingSize } from "./logic.js?v=8";
 
 const W = "https://api.open-meteo.com/v1/forecast";
 const r0 = (x) => Math.round(x);

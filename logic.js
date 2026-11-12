@@ -302,7 +302,7 @@ export function evalHour(spotId, h, days, weight = 75) {
   const s = SPOTS.find((x) => x.id === spotId);
   const day = isDay(h.t, days);
   const items = [
-    { kind: "prone", label: "Prone", ...evalProne(h.c, s) },
+    { kind: "prone", label: "Surf foil", ...evalProne(h.c, s) },
     { kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) },
     ...RUNS.filter((r) => r.spot === spotId).map((r) => ({ kind: "downwind", label: `Downwind ${r.name}`, run: r.id, ...evalDownwind(h.c, r) })),
   ].map((x) => (day ? x : { ...x, level: "no" }));
@@ -334,7 +334,7 @@ export function analyse(spots, days, { now = new Date(), weight = 75, horizonH =
   const wins = [];
   SPOTS.forEach((s) => {
     const hrs = spots[s.id].hours;
-    wins.push(...windowsFrom(hrs, (c) => evalProne(c, s), { kind: "prone", label: "Prone", where: s.short, spot: s.id }, days, nowIso, endIso));
+    wins.push(...windowsFrom(hrs, (c) => evalProne(c, s), { kind: "prone", label: "Surf foil", where: s.short, spot: s.id }, days, nowIso, endIso));
     wins.push(...windowsFrom(hrs, (c) => evalWing(c, s, weight), { kind: "wing", label: "Wing", where: s.short, spot: s.id }, days, nowIso, endIso));
   });
   RUNS.forEach((r) => {

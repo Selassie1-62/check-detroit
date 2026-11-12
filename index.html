@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Check Détroit</title>
-<meta name="description" content="Conditions de foil dans le détroit du Pas-de-Calais : prone, downwind, wing.">
+<meta name="description" content="Conditions de foil dans le détroit du Pas-de-Calais : surf foil, downwind, wing.">
 <meta name="theme-color" content="#10232e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,7 +164,7 @@ section { display: grid; gap: 10px; }
   <header>
     <div>
       <h1>Check Détroit</h1>
-      <p class="sub">Foil sur la Côte d'Opale, d'Hardelot à Calais : prone, downwind, wing.</p>
+      <p class="sub">Foil sur la Côte d'Opale, d'Hardelot à Calais : surf foil, downwind, wing.</p>
     </div>
     <div class="checkrow">
       <button class="check" id="check" type="button">Check</button>
@@ -186,7 +186,7 @@ section { display: grid; gap: 10px; }
     <div class="brief" id="brief">
       <div class="briefbar">
         <div class="seg" role="group" aria-label="Discipline">
-          <button type="button" data-kind="prone">Prone</button><button type="button" data-kind="wing">Wing</button><button type="button" data-kind="downwind">Downwind</button>
+          <button type="button" data-kind="prone">Surf foil</button><button type="button" data-kind="wing">Wing</button><button type="button" data-kind="downwind">Downwind</button>
         </div>
         <button type="button" class="linkbtn" id="brief-go">Actualiser</button>
       </div>
@@ -224,7 +224,7 @@ section { display: grid; gap: 10px; }
     <h2 id="h-win">Prochaines fenêtres · 3 jours</h2>
     <div class="filters" role="group" aria-label="Filtrer par discipline">
       <button class="chip" type="button" data-f="all" aria-pressed="true">Tout</button>
-      <button class="chip" type="button" data-f="prone" aria-pressed="false">Prone</button>
+      <button class="chip" type="button" data-f="prone" aria-pressed="false">Surf foil</button>
       <button class="chip" type="button" data-f="downwind" aria-pressed="false">Downwind</button>
       <button class="chip" type="button" data-f="wing" aria-pressed="false">Wing</button>
     </div>
@@ -271,7 +271,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=7";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=8";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -351,7 +351,7 @@ function renderNow(kg) {
     const st = c.wdir == null ? null : shoreType(c.wdir, s.facing);
     const p = evalProne(c, s), w = evalWing(c, s, kg);
     const runs = RUNS.filter((r) => r.spot === s.id).map((r) => ({ r, e: evalDownwind(c, r) })).filter((x) => x.e.level !== "no");
-    const v = [verdict(day ? p.level : "no", "Prone"), verdict(day ? w.level : "no", "Wing" + (w.size && w.level !== "no" ? ` ${r1(w.size)} m²` : ""))];
+    const v = [verdict(day ? p.level : "no", "Surf foil"), verdict(day ? w.level : "no", "Wing" + (w.size && w.level !== "no" ? ` ${r1(w.size)} m²` : ""))];
     runs.forEach(({ r, e }) => v.push(verdict(day ? e.level : "no", `DW ${r.name}${e.support === "wing" ? " (wing)" : ""}`)));
     if (!runs.length) v.push(verdict("no", "Downwind"));
     return `<article class="card"><h3>${s.name}</h3>
@@ -378,7 +378,7 @@ function renderWins() {
     let support = "";
     if (w.kind === "downwind") support = b.support === "paddle" ? "Paddle (ou wing)" : "Wing ou parawing";
     if (w.kind === "wing") support = b.size ? `Wing ${r1(b.size)} m² (indicatif)` : "Wing";
-    if (w.kind === "prone") support = "Planche de prone, grande aile";
+    if (w.kind === "prone") support = "Planche de surf foil, grande aile";
     const same = w.start.slice(0, 10) === w.end.slice(0, 10);
     const when = same ? `${fmtDay(w.start)} · ${hh(w.start)}–${hh(w.end)}` : `${fmtDay(w.start)} ${hh(w.start)} → ${fmtDay(w.end)} ${hh(w.end)}`;
     return `<article class="win ${w.level}"><div class="bar"></div><div class="body">
@@ -425,7 +425,7 @@ const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 function kindText(x) {
   if (x.kind === "wing") return `Wing${x.size ? " " + r1(x.size) + " m²" : ""}`;
   if (x.kind === "downwind") return `${x.label}${x.support === "wing" ? " (wing)" : ""}`;
-  return "Prone";
+  return "Surf foil";
 }
 
 function renderHero() {
@@ -489,7 +489,7 @@ function renderHero() {
 function renderStrip(id, kg) {
   const H = state.spots[id].hours, nowT = nowHour(state.spots, id).t;
   const days = [...new Set(H.map((h) => h.t.slice(0, 10)))].filter((d) => d >= nowT.slice(0, 10)).slice(0, 3);
-  const letter = { prone: "P", wing: "W", downwind: "D" };
+  const letter = { prone: "S", wing: "W", downwind: "D" };
   let selInfo = "";
   const rows = days.map((d) => {
     const cells = [];
@@ -509,7 +509,7 @@ function renderStrip(id, kg) {
   });
   const hours = `<div class="hours"><span></span>${Array.from({ length: 16 }, (_, k) => `<span>${(k + 6) % 3 === 0 ? k + 6 : ""}</span>`).join("")}</div>`;
   return `<div class="strip">${hours}${rows.join("")}
-    <div class="legend"><span><i style="background:var(--go)"></i>GO</span><span><i style="background:var(--maybe)"></i>Limite</span><span><i style="background:var(--no-bg);border:1px solid var(--line)"></i>Rien</span><span>P prone · D downwind · W wing · touche une case pour le détail</span></div>
+    <div class="legend"><span><i style="background:var(--go)"></i>GO</span><span><i style="background:var(--maybe)"></i>Limite</span><span><i style="background:var(--no-bg);border:1px solid var(--line)"></i>Rien</span><span>S surf foil · D downwind · W wing · touche une case pour le détail</span></div>
     <div class="celldetail">${selInfo}</div></div>`;
 }
 
@@ -540,7 +540,7 @@ async function renderBrief(force) {
   if (!state.spots || !S) return;
   const req = ++briefReq;
   try {
-    if (!briefMod) briefMod = await import("./briefing.js?v=7");
+    if (!briefMod) briefMod = await import("./briefing.js?v=8");
     if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
       $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
       ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };
