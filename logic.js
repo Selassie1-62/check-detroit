@@ -2,11 +2,11 @@
 // Données : Open-Meteo (usage non commercial, attribution DWD / Météo-France / ECMWF / NOAA).
 
 export const SPOTS = [
-  { id: "hardelot", name: "Hardelot", short: "Hardelot", lat: 50.635, lon: 1.54, facing: 275 },
-  { id: "equihen", name: "Équihen · Le Portel", short: "Équihen", lat: 50.68, lon: 1.53, facing: 270 },
-  { id: "boulogne", name: "Boulogne-sur-Mer", short: "Boulogne", lat: 50.735, lon: 1.55, facing: 290 },
+  { id: "hardelot", name: "Hardelot", short: "Hardelot", lat: 50.635, lon: 1.54, facing: 275, current: { flood: 0, lagH: 2 } },
+  { id: "equihen", name: "Équihen · Le Portel", short: "Équihen", lat: 50.68, lon: 1.53, facing: 270, current: { flood: 0, lagH: 2 } },
+  { id: "boulogne", name: "Boulogne-sur-Mer", short: "Boulogne", lat: 50.735, lon: 1.55, facing: 290, current: { flood: 0, lagH: 2 } },
   // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
-  { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "La Rochette", lat: 50.81, lon: 1.54, facing: 270,
+  { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270, current: { flood: 0, lagH: 2 },
     longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
   { id: "wissant", name: "Wissant · Tardinghen", short: "Wissant", lat: 50.92, lon: 1.64, facing: 315 },
   { id: "sangatte", name: "Sangatte · Blériot", short: "Sangatte", lat: 50.98, lon: 1.78, facing: 335 },

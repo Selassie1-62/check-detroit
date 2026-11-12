@@ -122,6 +122,20 @@ section { display: grid; gap: 10px; }
 .celldetail { font-size: .92rem; min-height: 1.4em; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+/* Briefing */
+.brief { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
+.briefbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 8px 14px; font: 600 .95rem var(--body); color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--sea); color: #fff; }
+.bhead { font: 700 1.5rem/1.1 var(--display); padding: 10px 12px; border-radius: 10px; }
+.bhead.ok { background: var(--go-bg); } .bhead.info { background: var(--go-bg); } .bhead.warn { background: var(--maybe-bg); } .bhead.danger { background: var(--no-bg); color: #c0392b; }
+.bitems { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.bitems li { display: grid; grid-template-columns: 28px 1fr; gap: 4px 8px; padding: 8px 10px; border-radius: 10px; border-left: 4px solid var(--line); background: color-mix(in srgb, var(--card) 85%, var(--line)); }
+.bitems li.ok { border-color: var(--go); } .bitems li.warn { border-color: var(--maybe); } .bitems li.danger { border-color: #d64545; }
+.bitems .ic { font-size: 1.2rem; line-height: 1.3; } .bitems b { display: block; }
+.wchart { width: 100%; height: 120px; display: block; }
+.wchart text { font: 10px var(--body); fill: var(--muted); }
 /* Carte */
 #map { height: min(62vh, 520px); border-radius: 12px; border: 1px solid var(--line); background: var(--card); z-index: 0; }
 .leaflet-container { font: 14px/1.35 var(--body); }
@@ -165,6 +179,19 @@ section { display: grid; gap: 10px; }
   <section aria-labelledby="h-home">
     <h2 id="h-home" class="visually-hidden" style="position:absolute;left:-9999px">Mon spot</h2>
     <div class="hero" id="hero"><div class="empty">Ton spot s'affichera ici dès que le Check sera terminé.</div></div>
+  </section>
+
+  <section aria-labelledby="h-brief">
+    <h2 id="h-brief">Je pars à l'eau</h2>
+    <div class="brief" id="brief">
+      <div class="briefbar">
+        <div class="seg" role="group" aria-label="Discipline">
+          <button type="button" data-kind="prone">Prone</button><button type="button" data-kind="wing">Wing</button><button type="button" data-kind="downwind">Downwind</button>
+        </div>
+        <button type="button" class="linkbtn" id="brief-go">Actualiser</button>
+      </div>
+      <div id="brief-out"><div class="empty">Le briefing des 3 prochaines heures s'affiche après le Check.</div></div>
+    </div>
   </section>
 
   <section aria-labelledby="h-map">
@@ -244,7 +271,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=5";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=7";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -281,7 +308,7 @@ SPOTS.forEach((s) => { const o = document.createElement("option"); o.value = s.i
 $("spot").value = store.get("spot", "wimereux");
 SPOTS.forEach((s) => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.short; $("home").append(o); });
 $("home").value = store.get("home", "wimereux");
-$("home").addEventListener("change", () => { store.set("home", $("home").value); state.sel = null; renderHero(); renderMap(); });
+$("home").addEventListener("change", () => { store.set("home", $("home").value); state.sel = null; renderHero(); renderMap(); renderBrief(false); });
 $("spot").addEventListener("change", () => { store.set("spot", $("spot").value); renderDetail(); });
 document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
   state.filter = b.dataset.f;
@@ -312,7 +339,7 @@ $("check").addEventListener("click", check);
 function refresh() {
   const kg = +$("kg").value || 75;
   state.wins = analyse(state.spots, state.days, { weight: kg });
-  renderNow(kg); renderWins(); renderDetail(); renderHero(); renderMap();
+  renderNow(kg); renderWins(); renderDetail(); renderHero(); renderMap(); renderBrief(false);
 }
 
 function verdict(level, text) { return `<span class="v ${level}">${text} · ${LBL[level]}</span>`; }
@@ -486,6 +513,52 @@ function renderStrip(id, kg) {
     <div class="celldetail">${selInfo}</div></div>`;
 }
 
+// ---------- Briefing « je pars à l'eau » ----------
+let briefMod = null, briefKind = store.get("briefKind", "wing"), briefReq = 0;
+const ncCache = {};
+function setKind(k) { briefKind = k; store.set("briefKind", k); document.querySelectorAll(".seg [data-kind]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.kind === k))); }
+setKind(briefKind);
+document.querySelectorAll(".seg [data-kind]").forEach((b) => b.addEventListener("click", () => { setKind(b.dataset.kind); renderBrief(false); }));
+$("brief-go").addEventListener("click", () => renderBrief(true));
+function windChart(series) {
+  if (!series.length) return "";
+  const W = 320, H = 120, pad = 18, max = Math.max(10, ...series.map((x) => x.g || x.s)) * 1.1, bw = (W - pad) / series.length;
+  const y = (v) => H - pad - (v / max) * (H - pad - 6);
+  const bars = series.map((x, k) => {
+    const X = pad + k * bw;
+    const gust = x.g != null ? `<rect x="${X + 1}" y="${y(x.g)}" width="${bw - 2}" height="${H - pad - y(x.g)}" fill="var(--maybe)" opacity=".35"/>` : "";
+    const rain = (x.p ?? 0) >= 0.2 ? `<text x="${X + bw / 2}" y="10" text-anchor="middle">💧</text>` : "";
+    const lab = x.t.slice(14, 16) === "00" ? `<text x="${X}" y="${H - 4}">${x.t.slice(11, 13)}h</text>` : "";
+    return `${gust}<rect x="${X + 1}" y="${y(x.s)}" width="${bw - 2}" height="${H - pad - y(x.s)}" fill="var(--sea)"/>${rain}${lab}`;
+  }).join("");
+  const ticks = [10, 20, 30].filter((v) => v < max).map((v) => `<line x1="${pad}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="0" y="${y(v) + 3}">${v}</text>`).join("");
+  return `<svg class="wchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Vent moyen et rafales sur 3 heures">${ticks}${bars}</svg>
+    <div class="legend"><span><i style="background:var(--sea)"></i>vent moyen</span><span><i style="background:var(--maybe);opacity:.5"></i>rafales</span><span>💧 averse · nœuds, pas de 15 min (AROME)</span></div>`;
+}
+async function renderBrief(force) {
+  const id = $("home").value, S = SPOTS.find((s) => s.id === id);
+  if (!state.spots || !S) return;
+  const req = ++briefReq;
+  try {
+    if (!briefMod) briefMod = await import("./briefing.js?v=7");
+    if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
+      $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
+      ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };
+    }
+    if (req !== briefReq) return;
+    const obs = (state.obs?.stations || []).filter((x) => (STATIONS_FOR[id] || []).includes(x.key))
+      .sort((a, b) => STATIONS_FOR[id].indexOf(a.key) - STATIONS_FOR[id].indexOf(b.key));
+    const b = briefMod.brief({ spot: S, hours: state.spots[id].hours, nc: ncCache[id].nc, obs, days: state.days, kind: briefKind, kg: +$("kg").value || 75 });
+    $("brief-out").innerHTML = `<div class="bhead ${b.sev}">${esc(b.headline)}</div>
+      <ul class="bitems">${b.items.map((x) => `<li class="${x.sev}"><span class="ic" aria-hidden="true">${x.icon}</span><span><b>${esc(x.title)}</b>${esc(x.text)}</span></li>`).join("")}</ul>
+      ${windChart(b.series)}
+      <p class="note">Briefing pour ${esc(S.name)}, de maintenant à +3 h. Il ne remplace pas ton œil sur la plage : regarde le plan d'eau, le ciel au vent et les autres riders avant d'y aller.</p>`;
+  } catch (e) {
+    console.error(e);
+    $("brief-out").innerHTML = `<div class="empty">Briefing indisponible pour le moment.</div>`;
+  }
+}
+
 // ---------- Carte ----------
 const BUOY_POS = { "62304": [51.103, 1.8], "62305": [50.4, 0.0], HASTINGSWN: [50.75, 0.75], WGABBARD: [51.98, 2.08] };
 const STATION_POS = { grisnez: [50.869, 1.584], boulogne: [50.734, 1.593], calais: [50.96, 1.952], dunkerque: [51.054, 2.34], touquet: [50.517, 1.62] };
@@ -555,7 +628,7 @@ function renderMap() {
 document.addEventListener("click", (ev) => {
   const b = ev.target.closest && ev.target.closest("[data-home]"); if (!b) return;
   $("home").value = b.dataset.home; store.set("home", b.dataset.home); state.sel = null;
-  map && map.closePopup(); renderHero(); renderMap(); $("hero").scrollIntoView({ behavior: "smooth", block: "start" });
+  map && map.closePopup(); renderHero(); renderMap(); renderBrief(false); $("hero").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 try { renderHero(); renderMap(); } catch (e) { console.error(e); }
 
