@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-12T16:57:50.874Z",
+  "updatedAt": "2026-11-12T17:52:53.640Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,50 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-12T16:54:00Z",
+      "time": "2026-11-12T17:48:00Z",
       "gustHour": false,
-      "wind": 25,
+      "wind": 24,
       "dir": 10,
       "gust": 33,
-      "tempC": 9.1
+      "tempC": 9
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-12T16:54:00Z",
+      "time": "2026-11-12T17:48:00Z",
       "gustHour": false,
-      "wind": 10,
-      "dir": 20,
-      "gust": 16,
-      "tempC": 7.5
+      "wind": 12,
+      "dir": 10,
+      "gust": 23,
+      "tempC": 8
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-12T16:54:00Z",
+      "time": "2026-11-12T17:48:00Z",
       "gustHour": false,
-      "wind": 17,
-      "dir": 10,
+      "wind": 18,
+      "dir": 360,
       "gust": 24,
-      "tempC": 8.6
+      "tempC": 8.8
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-12T17:48:00Z",
+      "gustHour": false,
+      "wind": 20,
+      "dir": 20,
+      "gust": 28,
+      "tempC": 9
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-12T17:42:00Z",
+      "gustHour": false,
+      "wind": 9,
+      "dir": 10,
+      "gust": 13,
+      "tempC": 7.1
     }
   ]
 }
