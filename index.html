@@ -87,7 +87,8 @@ input[type=number] { width: 5.5em; }
 a { color: var(--sea); }
 .note { color: var(--muted); font-size: .85rem; }
 .links { display: grid; gap: 6px; }
-iframe.shom { width: 100%; height: 150px; border: 0; background: #fff; border-radius: 8px; display: block; }
+.shomrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 560px; }
+iframe.shom { width: 100%; height: 150px; border: 0; background: transparent; border-radius: 10px; display: block; overflow: hidden; }
 section { display: grid; gap: 10px; }
 /* Homespot */
 .homepick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -205,9 +206,9 @@ section { display: grid; gap: 10px; }
 
   <section aria-labelledby="h-tide">
     <h2 id="h-tide">Marée officielle · SHOM</h2>
-    <div class="grid">
-      <div class="card"><h3>Boulogne-sur-Mer</h3><iframe class="shom" title="Marée SHOM Boulogne-sur-Mer" loading="lazy" data-port="BOULOGNE-SUR-MER"></iframe></div>
-      <div class="card"><h3>Calais</h3><iframe class="shom" title="Marée SHOM Calais" loading="lazy" data-port="CALAIS"></iframe></div>
+    <div class="shomrow">
+      <iframe class="shom" title="Marée SHOM Boulogne-sur-Mer" loading="lazy" data-port="BOULOGNE-SUR-MER"></iframe>
+      <iframe class="shom" title="Marée SHOM Calais" loading="lazy" data-port="CALAIS"></iframe>
     </div>
     <p class="note">Marée du jour fournie par le SHOM (vignette gratuite). Courants : <a href="https://diffusion.shom.fr/marees/courants-de-maree/atlas-de-courants-de-maree-2d-pas-de-calais.html" target="_blank" rel="noopener">atlas des courants de marée du Pas-de-Calais</a>.</p>
   </section>
@@ -247,12 +248,13 @@ import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analys
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
-  f.srcdoc = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>html,body{margin:0;overflow:hidden}#w{display:inline-block;transform-origin:0 0}</style><body><div id="w"><script src="https://services.data.shom.fr/hdm/vignette/petite/${f.dataset.port}?locale=fr"><\/script></div></body>`;
+  f.setAttribute("allowtransparency", "true");
+  f.srcdoc = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>html,body{margin:0;overflow:hidden;background:transparent}#w{display:inline-block;transform-origin:0 0}#w table{border-radius:0}</style><body><div id="w"><script src="https://services.data.shom.fr/hdm/vignette/petite/${f.dataset.port}?locale=fr"><\/script></div></body>`;
   // Une fois la vignette chargée, on la met à l'échelle de la carte (sans la déformer) et on ajuste la hauteur.
   const fit = () => {
     try {
       const w = f.contentDocument && f.contentDocument.getElementById("w"); if (!w || !w.offsetWidth) return;
-      const k = Math.min(1, f.clientWidth / w.offsetWidth);
+      const k = f.clientWidth / w.offsetWidth; // remplit exactement la colonne
       w.style.transform = `scale(${k})`;
       f.style.height = Math.ceil(w.offsetHeight * k) + "px";
     } catch {}
