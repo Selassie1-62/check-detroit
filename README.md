@@ -75,6 +75,8 @@ remplace le secret `NTFY_TOPIC` et réabonne-toi dans l'app.
 - Marées : vignettes officielles SHOM (gratuites) pour Boulogne et Calais ; la courbe horaire du tableau vient du modèle Open-Meteo (indicative). L'API SHOM est payante (4 600 €/an, réponse du 06/11/2026).
 - Bouée GeoDunes d'Ambleteuse : pas d'accès automatisé sans contribution financière (réponse GeoDunes du 03/11/2026). Consultation manuelle via le lien.
 - MARC (Ifremer) : simple lien dans la page. Ses données sont réservées à un usage personnel, sans rediffusion ; une intégration automatique demande l'accord d'Ifremer (formulaire http://forms.ifremer.fr/lops-oc/marc-ww3/).
+- Prone à La Rochette / Pointe aux Oies (spot « Wimereux ») : petite houle longue acceptée (≥ 0,15 m à ≥ 10 s = Limite, ≥ 0,4 m = GO) si le vent est de terre ou faible (sessions des 31/10 et 11/11/2026).
+- Alerte Scilly : heure d'arrivée calculée depuis l'heure de la mesure ; taille à la côte ≈ 10 % de Scilly (calage du 11/11/2026 : 3,6-4,1 m / 12,5 s → ~0,35 m à Ambleteuse, arrivée ~16 h plus tard).
 - Seuils de Calais calés sur une seule session (05/11/2026) : à affiner avec les prochaines.
 - Bouée de Scilly : utilisée seulement si elle est présente dans le flux Cefas (le journal du robot liste les bouées disponibles).
 - Les modèles ratent souvent la houle longue : le site peut sous-estimer une session de prone. La bouée prime.

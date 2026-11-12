@@ -87,7 +87,7 @@ input[type=number] { width: 5.5em; }
 a { color: var(--sea); }
 .note { color: var(--muted); font-size: .85rem; }
 .links { display: grid; gap: 6px; }
-iframe.shom { width: 100%; height: 330px; border: 0; background: #fff; border-radius: 8px; }
+iframe.shom { width: 100%; height: 150px; border: 0; background: #fff; border-radius: 8px; display: block; }
 section { display: grid; gap: 10px; }
 /* Homespot */
 .homepick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -243,11 +243,22 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=4";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=5";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
-  f.srcdoc = `<!doctype html><meta charset="utf-8"><body style="margin:0;font-family:sans-serif"><script src="https://services.data.shom.fr/hdm/vignette/grande/${f.dataset.port}?locale=fr"><\/script></body>`;
+  f.srcdoc = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>html,body{margin:0;overflow:hidden}#w{display:inline-block;transform-origin:0 0}</style><body><div id="w"><script src="https://services.data.shom.fr/hdm/vignette/petite/${f.dataset.port}?locale=fr"><\/script></div></body>`;
+  // Une fois la vignette chargée, on la met à l'échelle de la carte (sans la déformer) et on ajuste la hauteur.
+  const fit = () => {
+    try {
+      const w = f.contentDocument && f.contentDocument.getElementById("w"); if (!w || !w.offsetWidth) return;
+      const k = Math.min(1, f.clientWidth / w.offsetWidth);
+      w.style.transform = `scale(${k})`;
+      f.style.height = Math.ceil(w.offsetHeight * k) + "px";
+    } catch {}
+  };
+  f.addEventListener("load", () => { fit(); setTimeout(fit, 800); setTimeout(fit, 2500); });
+  addEventListener("resize", fit);
 });
 
 const $ = (id) => document.getElementById(id);
@@ -375,7 +386,7 @@ const per = (L) => [L.Tpeak, L.Tz].find((x) => x != null && x <= 20) ?? null; //
 // Sémaphores et bouées les plus utiles pour chaque spot.
 const STATIONS_FOR = { hardelot: ["touquet", "boulogne"], equihen: ["boulogne"], boulogne: ["boulogne"], wimereux: ["boulogne", "grisnez"],
   wissant: ["grisnez", "calais"], sangatte: ["calais", "grisnez"], calais: ["calais", "dunkerque"] };
-const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], wimereux: ["HASTINGSWN", "62305"],
+const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], wimereux: ["HASTINGSWN", "SCILLY", "62305"],
   wissant: ["62304", "WGABBARD"], sangatte: ["62304", "WGABBARD"], calais: ["62304", "WGABBARD"] };
 // Flèche dans le sens où va le vent (provenance + 180°), avec le texte « vient du … » à côté pour lever toute ambiguïté.
 const arrowSvg = (from, cls = "arrow") => from == null ? "" :
@@ -431,7 +442,7 @@ function renderHero() {
     const eta = tp ? Math.round((b.distKm / (0.78 * tp * 3.6)) * 10) / 10 : null;
     tiles.push(`<div class="tile"><span class="lab">Bouée · ${esc(b.label)}</span>${arrowSvg(L.W_PDIR)}
       <span><span class="val">${r1(L.Hm0)} m</span><br><span>${tp ? r1(tp) + " s" : "période —"}${L.W_PDIR != null ? ` · vient du ${compass(L.W_PDIR)}` : ""}</span></span>
-      <span class="more">${ageH > 3 ? `mesure d'il y a ${Math.round(ageH)} h · ` : ""}${eta && tp >= 8 ? `houle : arrive à la côte en ~${r1(eta)} h` : b.id === "62304" || b.id === "WGABBARD" ? "mer du Nord : en amont pour Calais et Wissant" : ""}</span></div>`);
+      <span class="more">${ageH > 3 ? `mesure d'il y a ${Math.round(ageH)} h · ` : ""}${eta && tp >= 8 ? `houle : à la côte vers ${hh(toLocalIso(new Date(Date.parse(L.t) + eta * 3600e3)))}${b.id === "SCILLY" ? ` · ~${r1(L.Hm0 * 0.1)} m` : ""}` : b.id === "62304" || b.id === "WGABBARD" ? "mer du Nord : en amont pour Calais et Wissant" : ""}</span></div>`);
   });
   if (state.spots) {
     const tz = state.spots[id].tides.filter((x) => x.t >= nowHour(state.spots, id).t).slice(0, 2);

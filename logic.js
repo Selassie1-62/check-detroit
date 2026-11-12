@@ -5,7 +5,9 @@ export const SPOTS = [
   { id: "hardelot", name: "Hardelot", short: "Hardelot", lat: 50.635, lon: 1.54, facing: 275 },
   { id: "equihen", name: "Équihen · Le Portel", short: "Équihen", lat: 50.68, lon: 1.53, facing: 270 },
   { id: "boulogne", name: "Boulogne-sur-Mer", short: "Boulogne", lat: 50.735, lon: 1.55, facing: 290 },
-  { id: "wimereux", name: "Wimereux · Ambleteuse · Audresselles", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270 },
+  // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
+  { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "La Rochette", lat: 50.81, lon: 1.54, facing: 270,
+    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
   { id: "wissant", name: "Wissant · Tardinghen", short: "Wissant", lat: 50.92, lon: 1.64, facing: 315 },
   { id: "sangatte", name: "Sangatte · Blériot", short: "Sangatte", lat: 50.98, lon: 1.78, facing: 335 },
   // Calais vit de la mer du vent de mer du Nord (N à E), pas de la houle atlantique, et marche en fin de montant.
@@ -220,6 +222,12 @@ export function evalProne(c, spot) {
   let level = "no";
   if (P >= T.goPower && swp >= T.goPeriod && clean && heff <= T.maxHs) level = "go";
   else if (P >= T.maybePower && swp >= T.maybePeriod && !messy && heff <= T.maxHs + 0.5) level = "maybe";
+  // Petite houle longue + vent propre (réglage par spot)
+  const LS = spot.longSwell;
+  if (LS && clean && swp >= LS.minT) {
+    if (heff >= LS.goHs) level = "go";
+    else if (heff >= LS.maybeHs && level === "no") { level = "maybe"; }
+  }
   const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (heff > T.maxHs) why.push("trop gros");
   return { level, score: Math.min(100, Math.round((P / 3) * 60 + (clean ? 30 : 0) + Math.min(10, swp))), P: round(P), heff: round(heff), swp: round(swp, 0), why };
