@@ -417,9 +417,9 @@ const STATIONS_FOR = { hardelot: ["touquet", "boulogne"], equihen: ["boulogne"],
   wissant: ["grisnez", "calais"], sangatte: ["calais", "grisnez"], calais: ["calais", "dunkerque"] };
 const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], wimereux: ["HASTINGSWN", "SCILLY", "62305"],
   wissant: ["62304", "WGABBARD"], sangatte: ["62304", "WGABBARD"], calais: ["62304", "WGABBARD"] };
-// Flèche dans le sens où va le vent (provenance + 180°), avec le texte « vient du … » à côté pour lever toute ambiguïté.
+// Flèche dans le sens où va le vent : la pointe est dessinée vers le bas (vent du N → vers le S), puis tournée de la provenance, avec le texte « vient du … » à côté pour lever toute ambiguïté.
 const arrowSvg = (from, cls = "arrow") => from == null ? "" :
-  `<svg class="${cls}" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="20"/><path transform="rotate(${(from + 180) % 360})" d="M0 16 L7 -2 L2 -2 L2 -16 L-2 -16 L-2 -2 L-7 -2 Z"/></svg>`;
+  `<svg class="${cls}" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="20"/><path transform="rotate(${from})" d="M0 16 L7 -2 L2 -2 L2 -16 L-2 -16 L-2 -2 L-7 -2 Z"/></svg>`;
 const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function kindText(x) {
