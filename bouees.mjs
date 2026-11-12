@@ -7,13 +7,13 @@ import { readFile, writeFile } from "node:fs/promises";
 const URL = "https://data-api.cefas.co.uk/api/recordsets/12651/data?page=1&resultsPerPage=1000000";
 const BUOYS = [
   { id: "HASTINGSWN", match: /^HASTINGS/i, label: "Hastings (Manche Est)", distKm: 58, note: "En amont pour la houle d'W à SW",
-    alert: { dirFrom: 195, dirTo: 290, minTp: 10, minHs: 0.25, spots: "Wimereux, Équihen, Hardelot" } },
+    alert: { dirFrom: 195, dirTo: 290, minTp: 10, minHs: 0.25, spots: "La Rochette / Pointe aux Oies, Équihen, Hardelot" } },
   { id: "WGABBARD", match: /GAB/i, label: "West Gabbard 2 (mer du Nord)", distKm: 130, note: "En amont pour la houle de N à NNE",
     alert: { dirFrom: 330, dirTo: 40, minTp: 9, minHs: 0.4, spots: "Calais, Sangatte, Wissant" } },
   // Préavis : la houle atlantique à l'entrée de la Manche, ~15 h avant la côte d'Opale. Elle perd beaucoup en route
   // (Cotentin, île de Wight, Manche qui se resserre) : c'est un signal pour regarder Greenwich puis Hastings, pas une taille à la côte.
   { id: "SCILLY", match: /SCIL/i, label: "Îles Scilly (entrée de la Manche)", distKm: 560, note: "Préavis lointain pour la houle d'W à SW (taille à la côte bien plus faible)",
-    alert: { dirFrom: 220, dirTo: 280, minTp: 12, minHs: 1.5, spots: "Wimereux, Équihen, Hardelot (à confirmer à Greenwich puis Hastings)" } },
+    alert: { dirFrom: 220, dirTo: 280, minTp: 12, minHs: 1.5, coastRatio: 0.1, spots: "La Rochette / Pointe aux Oies, Équihen, Hardelot — à confirmer à Hastings" } },
 ];
 // Bateaux-feux du Met Office relayés par la NOAA (NDBC, domaine public) : mesures horaires.
 const NDBC = [
@@ -85,10 +85,14 @@ for (const b of out.buoys.filter((x) => x.alert && x.last)) {
   if (!(TOPIC && L.Tpeak >= A.minTp && L.Hm0 >= A.minHs && inSector(d, A.dirFrom, A.dirTo))) continue;
   if (st[b.id] && Date.now() - st[b.id] < COOLDOWN_H * 3600e3) continue;
   const eta = Math.round((b.distKm / (0.78 * L.Tpeak * 3.6)) * 10) / 10; // vitesse de groupe en eau profonde
+  // Heure d'arrivée comptée depuis l'heure de la MESURE (pas de l'envoi de l'alerte).
+  const arr = new Date(Date.parse(L.t) + eta * 3600e3).toLocaleString("fr-FR", { weekday: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+  // Taille attendue à la côte : ~10 % de Scilly (calage 11/11/2026 : 3,6-4,1 m / 12,5 s à Scilly → ~0,35 m à Ambleteuse).
+  const coast = A.coastRatio ? ` · environ ${(L.Hm0 * A.coastRatio).toFixed(2).replace(".", ",")} m à la côte` : "";
   const res = await fetch("https://ntfy.sh/", { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ topic: TOPIC, priority: 4, tags: ["ocean"], ...(SITE ? { click: SITE } : {}),
       title: `Houle longue détectée · ${b.label} · ${L.Tpeak} s`,
-      message: `Hs ${L.Hm0} m · Tp ${L.Tpeak} s · venant de ${Math.round(d)}°.\nArrivée estimée dans ~${eta} h (${A.spots}).\nVérifie la bouée la plus proche avant de partir.` }) });
+      message: `Hs ${L.Hm0} m · Tp ${L.Tpeak} s · venant de ${Math.round(d)}°.\nArrivée estimée ${arr}${coast} (${A.spots}).\nVérifie la bouée la plus proche avant de partir.` }) });
   if (res.ok) { st[b.id] = Date.now(); console.log("Alerte houle longue envoyée :", b.label); }
 }
 // Alerte « Calais marche » : mer de N à E formée dans le détroit (mesurée, pas prévue) et vent côtier faible ou de terre.
