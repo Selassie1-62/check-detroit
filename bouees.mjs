@@ -117,7 +117,9 @@ for (const b of out.buoys.filter((x) => x.alert && x.last)) {
   const wgName = (wgB?.label || "West Gabbard").split(" (")[0];
   const fresh = (L) => L && Date.now() - Date.parse(L.t) < 3 * 3600e3;
   const sandOk = fresh(sand) && sand.Hm0 >= 0.8;
-  const wgOk = fresh(wg) && wg.Hm0 >= 1.4 && (wg.Tpeak ?? 0) >= 5.5 && inSector(wg.W_PDIR, 330, 100);
+  // Seuil selon la bouée : West Gabbard 2 1,4 m (05/11) ; South Knock en relais, plus abritée, 0,9 m (13/11 : 1,0-1,2 m / 6-8 s, ça marchait à Calais).
+  const wgMin = wgB?.relayOf && /KNOCK/i.test(wgB.label) ? 0.9 : 1.4;
+  const wgOk = fresh(wg) && wg.Hm0 >= wgMin && (wg.Tpeak ?? 0) >= 5.5 && inSector(wg.W_PDIR, 330, 100);
   let obs = null; try { obs = JSON.parse(await readFile("obs.json", "utf8")).stations.find((s) => s.key === "calais"); } catch {}
   // Plage de Calais orientée ~345° : vent de 60 à 230° = de terre ou travers ; sinon il faut qu'il soit tombé.
   const windOk = obs && obs.wind != null && (obs.wind <= 12 || (inSector(obs.dir, 60, 230) && obs.wind <= 18));
@@ -137,7 +139,7 @@ for (const b of out.buoys.filter((x) => x.alert && x.last)) {
     const res = await fetch("https://ntfy.sh/", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic: TOPIC, priority: 4, tags: ["ocean"], ...(SITE ? { click: SITE } : {}),
         title: "Calais peut marcher · mer de NE formée",
-        message: `Sandettie ${sand?.Hm0 ?? "—"} m · ${wgName} ${wg?.Hm0 ?? "—"} m / ${wg?.Tpeak ?? "—"} s ${wg?.W_PDIR != null ? Math.round(wg.W_PDIR) + "°" : ""}\nVent à Calais ${obs.wind} nds du ${obs.dir}°.\n${pm || "Vise la fin du montant."}` }) });
+        message: `Sandettie ${fresh(sand) ? sand.Hm0 + " m" : "muette"} · ${wgName} ${wg?.Hm0 ?? "—"} m / ${wg?.Tpeak ?? "—"} s ${wg?.W_PDIR != null ? Math.round(wg.W_PDIR) + "°" : ""}\nVent à Calais ${obs.wind} nds du ${obs.dir}°.\n${pm || "Vise la fin du montant."}` }) });
     if (res.ok) { st.calais = Date.now(); console.log("Alerte Calais envoyée"); }
   }
 }
