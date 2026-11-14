@@ -1,5 +1,5 @@
 // Robot d'alertes : lancé par GitHub Actions toutes les 3 h.
-// Envoie une notification ntfy pour chaque NOUVELLE fenêtre GO (prone ou downwind) dans les 3 jours.
+// Envoie une notification ntfy pour chaque NOUVELLE fenêtre GO (surf foil ou downwind) dans les 3 jours, puis un rappel le matin même.
 import { readFile, writeFile } from "node:fs/promises";
 import { fetchAll, buildHours, analyse, daylight } from "./logic.js";
 
@@ -40,6 +40,23 @@ for (const w of wins) {
   });
   console.log(r.ok ? "Alerte envoyée :" : "Échec ntfy :", title, w.start);
   if (r.ok) { sent[key] = now; n++; }
+}
+// Rappel le matin même : une alerte envoyée 3 jours avant passe facilement inaperçue.
+const local = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" }).format(new Date());
+const today = local.slice(0, 10), hourNow = parseInt(local.slice(11, 13), 10);
+if (hourNow >= 6 && hourNow <= 10) {
+  for (const w of wins.filter((x) => x.start.slice(0, 10) === today)) {
+    const key = `${w.kind}|${w.run || w.spot}|${today}|rappel`;
+    if (sent[key]) continue;
+    const r = await fetch("https://ntfy.sh/", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic: TOPIC, priority: 4, tags: ["alarm_clock"], ...(SITE ? { click: SITE } : {}),
+        title: `Aujourd'hui · ${w.label} GO · ${w.where}`,
+        message: `${w.start.slice(11, 13)}h → ${w.end.slice(11, 13)}h\n${(w.best.why || []).join(" · ")}\nConfiance ${w.conf}. Ouvre le briefing « Je pars à l'eau » avant d'y aller.` }),
+    });
+    console.log(r.ok ? "Rappel envoyé :" : "Échec ntfy :", w.label, w.where, w.start);
+    if (r.ok) { sent[key] = now; n++; }
+  }
 }
 await writeFile(STATE_FILE, JSON.stringify(sent, null, 2) + "\n");
 console.log(`${wins.length} fenêtre(s) GO, ${n} nouvelle(s) alerte(s).`);

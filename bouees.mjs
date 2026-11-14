@@ -133,7 +133,7 @@ for (const b of out.buoys.filter((x) => x.alert && x.last)) {
       const h = (await r.json()).hourly; const now = new Date().toISOString().slice(0, 13);
       for (let k = 1; k < h.time.length - 1; k++) {
         const [a, b, c] = [h.sea_level_height_msl[k - 1], h.sea_level_height_msl[k], h.sea_level_height_msl[k + 1]];
-        if (b > a && b >= c && Date.parse(h.time[k]) > Date.now() - 3600e3) { pm = `Pleine mer vers ${h.time[k].slice(11, 13)} h (modèle, vérifie SHOM) : vise les 2-3 h avant.`; break; }
+        if (b > a && b >= c && Date.parse(h.time[k]) > Date.now() - 3600e3) { pm = `Pleine mer vers ${h.time[k].slice(11, 13)} h (modèle, vérifie SHOM) : vise de la mi-marée montante jusqu’à la PM (PM −4 h → PM).`; break; }
       }
     } catch {}
     const res = await fetch("https://ntfy.sh/", { method: "POST", headers: { "Content-Type": "application/json" },

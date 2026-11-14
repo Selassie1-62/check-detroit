@@ -14,7 +14,7 @@ export const SPOTS = [
   // Calage : jeudi 05/11/2026 8 h, ça surfait (Sandettie 0,9 m · West Gabbard 1,7 m / 6 s ENE · Hastings 0,9 m / 6,3 s ENE · vent E 5-10 nds).
   { id: "calais", name: "Calais · digue et plage", short: "Calais", lat: 50.985, lon: 1.84, facing: 345,
     windsea: { sector: [300, 95], goHs: 0.7, goT: 4.5, maybeHs: 0.5, maybeT: 4, sideMax: 14 },
-    tide: { from: -180, to: 60, label: "fin du montant (PM −3 h → PM +1 h)" } },
+    tide: { from: -240, to: 60, label: "mi-marée montante à la pleine mer (PM −4 h → PM +1 h)" } },
 ];
 
 // Parcours de downwind : sens du vent acceptable (provenance, degrés) et côte longée.
