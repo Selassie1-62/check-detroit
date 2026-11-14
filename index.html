@@ -186,7 +186,7 @@ section { display: grid; gap: 10px; }
     <div class="brief" id="brief">
       <div class="briefbar">
         <div class="seg" role="group" aria-label="Discipline">
-          <button type="button" data-kind="prone">Surf foil</button><button type="button" data-kind="wing">Wing</button><button type="button" data-kind="downwind">Downwind</button>
+          <button type="button" data-kind="prone">Surf foil</button><button type="button" data-kind="wing">Wing / parawing</button><button type="button" data-kind="downwind">Downwind</button>
         </div>
         <button type="button" class="linkbtn" id="brief-go">Actualiser</button>
       </div>
@@ -271,7 +271,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=9";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=12";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -351,8 +351,8 @@ function renderNow(kg) {
     const st = c.wdir == null ? null : shoreType(c.wdir, s.facing);
     const p = evalProne(c, s), w = evalWing(c, s, kg);
     const runs = RUNS.filter((r) => r.spot === s.id).map((r) => ({ r, e: evalDownwind(c, r) })).filter((x) => x.e.level !== "no");
-    const v = [verdict(day ? p.level : "no", "Surf foil"), verdict(day ? w.level : "no", "Wing" + (w.size && w.level !== "no" ? ` ${r1(w.size)} m²` : ""))];
-    runs.forEach(({ r, e }) => v.push(verdict(day ? e.level : "no", `DW ${r.name}${e.support === "wing" ? " (wing)" : ""}`)));
+    const v = [verdict(day ? p.level : "no", "Surf foil"), verdict(day ? w.level : "no", w.gear && w.level !== "no" ? w.gear.label : "Wing / parawing")];
+    runs.forEach(({ r, e }) => v.push(verdict(day ? e.level : "no", `DW ${r.name}${e.gear ? ` (${e.gear.label.toLowerCase()})` : ""}`)));
     if (!runs.length) v.push(verdict("no", "Downwind"));
     return `<article class="card"><h3>${s.name}</h3>
       <dl class="kv">
@@ -376,8 +376,8 @@ function renderWins() {
   $("wins").innerHTML = list.map((w) => {
     const b = w.best;
     let support = "";
-    if (w.kind === "downwind") support = b.support === "paddle" ? "Paddle (ou wing)" : "Wing ou parawing";
-    if (w.kind === "wing") support = b.size ? `Wing ${r1(b.size)} m² (indicatif)` : "Wing";
+    if (w.kind === "downwind") support = b.gear ? `Départ ${b.gear.label.toLowerCase()}, voile rangée ensuite` : "Départ parawing";
+    if (w.kind === "wing") support = b.gear ? b.gear.label + (b.gear.note ? ` (${b.gear.note})` : "") : "Wing";
     if (w.kind === "prone") support = "Planche de surf foil, grande aile";
     const same = w.start.slice(0, 10) === w.end.slice(0, 10);
     const when = same ? `${fmtDay(w.start)} · ${hh(w.start)}–${hh(w.end)}` : `${fmtDay(w.start)} ${hh(w.start)} → ${fmtDay(w.end)} ${hh(w.end)}`;
@@ -423,8 +423,8 @@ const arrowSvg = (from, cls = "arrow") => from == null ? "" :
 const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function kindText(x) {
-  if (x.kind === "wing") return `Wing${x.size ? " " + r1(x.size) + " m²" : ""}`;
-  if (x.kind === "downwind") return `${x.label}${x.support === "wing" ? " (wing)" : ""}`;
+  if (x.kind === "wing") return x.gear ? x.gear.label : "Wing / parawing";
+  if (x.kind === "downwind") return `${x.label}${x.gear ? ` (départ ${x.gear.label.toLowerCase()})` : ""}`;
   return "Surf foil";
 }
 
@@ -540,7 +540,7 @@ async function renderBrief(force) {
   if (!state.spots || !S) return;
   const req = ++briefReq;
   try {
-    if (!briefMod) briefMod = await import("./briefing.js?v=9");
+    if (!briefMod) briefMod = await import("./briefing.js?v=12");
     if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
       $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
       ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };

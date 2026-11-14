@@ -1,7 +1,7 @@
 // Beach marshal : le briefing des 3 prochaines heures, juste avant de se mettre à l'eau.
 // Sources : AROME HD (Météo-France, pas de 15 min) via Open-Meteo pour le vent, les rafales et les averses ;
 // marée et température de l'eau du Check ; vent mesuré aux sémaphores pour juger si la prévision colle à la réalité.
-import { compass, shoreType, angDiff, toLocalIso, wingSize } from "./logic.js?v=9";
+import { compass, shoreType, angDiff, toLocalIso, gearFor } from "./logic.js?v=12";
 
 const W = "https://api.open-meteo.com/v1/forecast";
 const r0 = (x) => Math.round(x);
@@ -90,7 +90,7 @@ export function brief(o) {
     if (Math.abs(dS) < 4 && turn < 25 && gf < 1.45)
       add("ok", "✅", "Vent stable", `${r0(s0.s)} nds du ${compass(s0.d)} (${st.label}), stable jusqu'à ${hm(last.t)}. Profite.`);
     else {
-      if (dS >= 4) { const at = series.find((x) => x.s >= s0.s + 4); add("warn", "📈", "Le vent se renforce", `${r0(s0.s)} → ${r0(last.s)} nds d'ici ${hm(last.t)}${at ? `, nettement dès ${hm(at.t)}` : ""}.${kind === "wing" ? ` Prends plutôt la ${wingSize(Math.max(...series.map((x) => x.s)), kg)} m².` : ""}`); }
+      if (dS >= 4) { const at = series.find((x) => x.s >= s0.s + 4); add("warn", "📈", "Le vent se renforce", `${r0(s0.s)} → ${r0(last.s)} nds d'ici ${hm(last.t)}${at ? `, nettement dès ${hm(at.t)}` : ""}.${(() => { if (kind === "prone") return ""; const mx = series.reduce((a, x) => (x.s > a.s ? x : a)), g = gearFor(mx.s, mx.g, { parawingOnly: kind === "downwind", kg }); return g ? ` Au plus fort (${r0(mx.s)} nds) : ${g.label.toLowerCase()}${g.note ? `, ${g.note}` : ""}.` : ""; })()}`); }
       if (dS <= -4) { const at = series.find((x) => x.s <= s0.s - 4); add(kind === "wing" || kind === "downwind" ? "warn" : "info", "📉", "Le vent faiblit", `${r0(s0.s)} → ${r0(last.s)} nds d'ici ${hm(last.t)}${at ? `, baisse marquée vers ${hm(at.t)}` : ""}.${kind === "wing" ? " Garde une marge pour rentrer." : ""}`); }
       if (turn >= 25) add("warn", "🧭", "Le vent tourne", `Du ${compass(first[1].d)} au ${compass(end[1].d)} d'ici ${hm(last.t)} : à ${spot.short}, il passe ${shoreType(end[1].d, spot.facing).label}.`);
       if (gf >= 1.45 && gMax && gMax.g >= 18) add("warn", "💨", "Vent rafaleux", `Rafales jusqu'à ${r0(gMax.g)} nds vers ${hm(gMax.t)} pour ${r0(gMax.s)} nds de moyenne (écart ×${gf.toFixed(1).replace(".", ",")}).`);

@@ -43,7 +43,7 @@ export const WAVE_MODELS = [
 
 export const THRESHOLDS = {
   prone: { goPower: 1.5, goPeriod: 8, maybePower: 0.8, maybePeriod: 6.5, maxHs: 2.2 },
-  downwind: { paddle: 18, wing: 14, maxMean: 28, maxGust: 32, bumpsHs: 0.6, bumpsT: 4.5 },
+  downwind: { paddle: 18, wing: 15, maxMean: 28, maxGust: 32, bumpsHs: 0.6, bumpsT: 4.5 },
   wing: { min: 12, max: 28, maxGust: 34 },
 };
 
@@ -277,7 +277,9 @@ export function evalDownwind(c, run) {
   else if (!dirOk) why.push("mauvais axe");
   if (tooMuch) why.push("trop fort");
   const score = level === "no" ? 0 : Math.min(100, Math.round(40 + (w - T.wing) * 3 + (ideal ? 15 : 0) + (bumps ? 15 : 0)));
-  return { level, support, score, why };
+  const gear = level === "no" ? null : gearFor(w, g, { parawingOnly: true });
+  if (gear) why.push(`départ ${gear.label.toLowerCase()} puis voile rangée${gear.note ? ` (${gear.note})` : ""}`);
+  return { level, support, gear, score, why };
 }
 
 export function evalWing(c, spot, weight) {
@@ -288,7 +290,33 @@ export function evalWing(c, spot, weight) {
   let level = "no";
   if (safe && w >= T.min + 2 && w <= T.max && g <= T.maxGust) level = "go";
   else if (safe && w >= T.min && w <= T.max + 2 && g <= T.maxGust + 4) level = "maybe";
-  return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w)), size: wingSize(w, weight), why: [`${round(w, 0)} nds (raf. ${round(g, 0)}) ${compass(c.wdir)} ${st.label}`] };
+  const gear = gearFor(w, g, { swell: (c.swh ?? 0) >= 0.4 || (c.hs ?? 0) >= 0.7, kg: weight });
+  const why = [`${round(w, 0)} nds (raf. ${round(g, 0)}) ${compass(c.wdir)} ${st.label}`];
+  if (gear) why.push(gear.label + (gear.note ? ` (${gear.note})` : ""));
+  return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w)), size: gear?.size ?? wingSize(w, weight), gear, why };
+}
+
+// Matériel de Henry : wing Cabrinha Mantis 4 m² (12 à 25 nds, préférée à 12-16 nds) ; au-delà, surtout avec de la houle,
+// parawings Cabrinha Nomad 3,8 / 3 / 2,5 m². Le downwind se fait toujours en départ parawing, voile rangée ensuite.
+// Le downwind se fait toujours en départ parawing, voile rangée ensuite.
+export const QUIVER = {
+  wing: { min: 12, max: 16, name: "Mantis", size: 4, upTo: 25 }, // wing Cabrinha Mantis 4 m² : 12 à 25 nds, préférée à 12-16 nds
+  parawing: [{ size: 3.8, min: 15, max: 20 }, { size: 3, min: 20, max: 25 }, { size: 2.5, min: 25, max: 40 }],
+};
+const m2 = (x) => String(x).replace(".", ",") + " m²";
+export function gearFor(w, g, { swell = false, parawingOnly = false, kg = 75 } = {}) {
+  if (w == null || w < (parawingOnly ? 13 : QUIVER.wing.min)) return null;
+  const Q = QUIVER, gg = g ?? w;
+  if (!parawingOnly && (w < Q.parawing[0].min || (w <= Q.wing.max && !swell))) {
+    return { type: "wing", size: Q.wing.size, label: `Wing ${Q.wing.name} ${m2(Q.wing.size)}`, note: w > Q.wing.max - 1 && swell ? "ou parawing Nomad 3,8 m² si la houle est là" : null };
+  }
+  const p = Q.parawing.find((x) => w < x.max) || Q.parawing.at(-1);
+  const i = Q.parawing.indexOf(p), smaller = Q.parawing[i + 1];
+  const alt = !parawingOnly && !swell && w <= Q.wing.upTo ? `ou wing ${Q.wing.name} ${m2(Q.wing.size)}, sans houle` : null;
+  const note0 = w < p.min ? `un peu juste pour la ${m2(p.size)} (${p.min}-${p.max} nds)` :
+    smaller && gg >= p.max + 5 ? `rafales à ${Math.round(gg)} nds : la ${m2(smaller.size)} si tu hésites` : null;
+  const note = [note0, alt].filter(Boolean).join(" ; ") || null;
+  return { type: "parawing", size: p.size, label: `Parawing Nomad ${m2(p.size)}`, note };
 }
 
 export const wingSize = (kt, kg = 75) => {
