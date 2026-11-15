@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-15T16:12:07.247Z",
+  "updatedAt": "2026-11-15T17:13:02.689Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-15T16:06:00Z",
+      "time": "2026-11-15T17:06:00Z",
       "gustHour": false,
-      "wind": 20,
-      "dir": 220,
-      "gust": 28,
-      "tempC": 12.7
+      "wind": 21,
+      "dir": 230,
+      "gust": 27,
+      "tempC": 12.4
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-15T16:06:00Z",
+      "time": "2026-11-15T17:06:00Z",
       "gustHour": false,
-      "wind": 16,
+      "wind": 15,
       "dir": 220,
-      "gust": 23,
-      "tempC": 12.2
+      "gust": 22,
+      "tempC": 12
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-15T16:06:00Z",
+      "time": "2026-11-15T17:06:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 210,
-      "gust": 16,
-      "tempC": 11.9
+      "wind": 9,
+      "dir": 200,
+      "gust": 12,
+      "tempC": 11
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-15T16:06:00Z",
+      "time": "2026-11-15T17:06:00Z",
       "gustHour": false,
-      "wind": 12,
+      "wind": 10,
       "dir": 190,
-      "gust": 17,
-      "tempC": 11.3
+      "gust": 14,
+      "tempC": 10.6
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-15T16:00:00Z",
+      "time": "2026-11-15T17:00:00Z",
       "gustHour": false,
-      "wind": 7,
-      "dir": 210,
-      "gust": 11,
-      "tempC": 11.9
+      "wind": 6,
+      "dir": 200,
+      "gust": 9,
+      "tempC": 11.1
     }
   ]
 }
