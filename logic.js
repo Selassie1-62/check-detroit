@@ -230,7 +230,9 @@ export function evalProne(c, spot) {
   }
   const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (heff > T.maxHs) why.push("trop gros");
-  return { level, score: Math.min(100, Math.round((P / 3) * 60 + (clean ? 30 : 0) + Math.min(10, swp))), P: round(P), heff: round(heff), swp: round(swp, 0), why };
+  const foil = level === "no" ? null : foilFor("prone", { heff, T: swp });
+  if (foil) why.push(`foil ${foil.label}${foil.note ? ` — ${foil.note}` : ""}`);
+  return { level, score: Math.min(100, Math.round((P / 3) * 60 + (clean ? 30 : 0) + Math.min(10, swp))), P: round(P), heff: round(heff), swp: round(swp, 0), foil, why };
 }
 
 // Spots de mer du vent (Calais) : mer totale (houle + mer du vent) venant du secteur N à E, périodes courtes acceptées,
@@ -255,7 +257,9 @@ function evalProneWindsea(c, spot) {
     else why.push(c.pmMin < 0 ? `PM dans ${fmtMin(-c.pmMin)}` : `PM il y a ${fmtMin(c.pmMin)}`);
   }
   const score = level === "no" ? 0 : Math.min(100, Math.round(heff * 50 + (clean ? 30 : 0) + Math.min(10, tm)));
-  return { level, score, P: round(P), heff: round(heff), swp: round(tm, 1), why };
+  const foil = level === "no" ? null : foilFor("prone", { heff, T: tm });
+  if (foil) why.push(`foil ${foil.label}`);
+  return { level, score, P: round(P), heff: round(heff), swp: round(tm, 1), foil, why };
 }
 const fmtMin = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? String(m % 60).padStart(2, "0") : ""}` : `${m} min`);
 
@@ -278,8 +282,10 @@ export function evalDownwind(c, run) {
   if (tooMuch) why.push("trop fort");
   const score = level === "no" ? 0 : Math.min(100, Math.round(40 + (w - T.wing) * 3 + (ideal ? 15 : 0) + (bumps ? 15 : 0)));
   const gear = level === "no" ? null : gearFor(w, g, { parawingOnly: true });
-  if (gear) why.push(`départ ${gear.label.toLowerCase()} puis voile rangée${gear.note ? ` (${gear.note})` : ""}`);
-  return { level, support, gear, score, why };
+  if (gear) why.push(`départ en ${gear.label.replace("Parawing", "parawing")} puis voile rangée${gear.note ? ` (${gear.note})` : ""}`);
+  const foil = level === "no" ? null : foilFor("downwind", { wind: w, heff: c.hs ?? 0 });
+  if (foil) why.push(`foil ${foil.label}${foil.note ? ` — ${foil.note}` : ""}`);
+  return { level, support, gear, foil, score, why };
 }
 
 export function evalWing(c, spot, weight) {
@@ -293,7 +299,9 @@ export function evalWing(c, spot, weight) {
   const gear = gearFor(w, g, { swell: (c.swh ?? 0) >= 0.4 || (c.hs ?? 0) >= 0.7, kg: weight });
   const why = [`${round(w, 0)} nds (raf. ${round(g, 0)}) ${compass(c.wdir)} ${st.label}`];
   if (gear) why.push(gear.label + (gear.note ? ` (${gear.note})` : ""));
-  return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w)), size: gear?.size ?? wingSize(w, weight), gear, why };
+  const foil = gear ? foilFor(gear.type, { wind: w }) : null;
+  if (foil) why.push(`foil ${foil.label}${foil.note ? ` — ${foil.note}` : ""}`);
+  return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w)), size: gear?.size ?? wingSize(w, weight), gear, foil, why };
 }
 
 // Matériel de Henry : wing Cabrinha Mantis 4 m² (12 à 25 nds, préférée à 12-16 nds) ; au-delà, surtout avec de la houle,
@@ -312,11 +320,33 @@ export function gearFor(w, g, { swell = false, parawingOnly = false, kg = 75 } =
   }
   const p = Q.parawing.find((x) => w < x.max) || Q.parawing.at(-1);
   const i = Q.parawing.indexOf(p), smaller = Q.parawing[i + 1];
-  const alt = !parawingOnly && !swell && w <= Q.wing.upTo ? `ou wing ${Q.wing.name} ${m2(Q.wing.size)}, sans houle` : null;
+  const alt = !parawingOnly && !swell && w <= Q.wing.upTo && gg <= Q.wing.upTo + 3 ? `ou wing ${Q.wing.name} ${m2(Q.wing.size)}, sans houle` : null;
   const note0 = w < p.min ? `un peu juste pour la ${m2(p.size)} (${p.min}-${p.max} nds)` :
-    smaller && gg >= p.max + 5 ? `rafales à ${Math.round(gg)} nds : la ${m2(smaller.size)} si tu hésites` : null;
+    // Calage 15/11/2026 (Nomad 3 m², ~20-22 nds, rafales 26-31 de SSW) : bonne taille, mais « à la rue » dans les rafales.
+    smaller && gg >= p.max + 8 ? `rafales à ${Math.round(gg)} nds : prends la ${m2(smaller.size)}` :
+    gg >= p.max + 3 ? `rafales à ${Math.round(gg)} nds : bonne taille, mais tu seras à la rue dans les rafales${smaller ? ` (la ${m2(smaller.size)} si tu veux du contrôle)` : ""}` : null;
   const note = [note0, alt].filter(Boolean).join(" ; ") || null;
   return { type: "parawing", size: p.size, label: `Parawing Nomad ${m2(p.size)}`, note };
+}
+
+// Foils North de Henry (16/11/2026) : SF 1080 / 830 / 680, DW 820 ; stabs S185, S145v2, S122 ; fuselages C600 (court) et C650 (moyen).
+const F = {
+  big: "SF 1080 · S185 · C650",       // surf foil petit / wing tout petit temps, pumping
+  mid: "SF 830 · S145v2 · C600",      // surf foil gros, wing, parawing (garder de la vitesse)
+  fast: "SF 680 · S145v2 · C600",     // houle rapide (pas encore essayé)
+  dw: "DW 820 · S122",                // downwind (à retester)
+};
+export function foilFor(kind, c = {}) {
+  const w = c.wind ?? 0, h = c.heff ?? 0, T = c.T ?? 0;
+  if (kind === "prone") {
+    if (h >= 0.8 && T >= 10) return { label: F.mid, note: `ou ${F.fast} pour suivre une houle rapide (à essayer)` };
+    if (h >= 0.6) return { label: F.mid, note: null };
+    return { label: F.big, note: "pour le pumping entre les vagues" };
+  }
+  if (kind === "wing") return w < 14 ? { label: F.big, note: "petit temps, pumping" } : { label: F.mid, note: null };
+  if (kind === "parawing") return w < 17 ? { label: F.big, note: "bas de plage : plus de portance" } : { label: F.mid, note: "garde de la vitesse" };
+  if (kind === "downwind") return { label: F.mid, note: w >= 20 && h >= 0.8 ? `ou ${F.dw} si les bosses sont longues (à retester)` : null };
+  return null;
 }
 
 export const wingSize = (kt, kg = 75) => {
