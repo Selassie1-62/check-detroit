@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-17T03:19:41.131Z",
+  "updatedAt": "2026-11-17T04:28:54.344Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-17T03:12:00Z",
+      "time": "2026-11-17T04:24:00Z",
       "gustHour": false,
-      "wind": 21,
-      "dir": 130,
-      "gust": 28,
-      "tempC": 8
+      "wind": 19,
+      "dir": 140,
+      "gust": 24,
+      "tempC": 9.3
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-17T03:12:00Z",
+      "time": "2026-11-17T04:24:00Z",
       "gustHour": false,
-      "wind": 13,
-      "dir": 130,
-      "gust": 21,
-      "tempC": 9
+      "wind": 12,
+      "dir": 140,
+      "gust": 18,
+      "tempC": 10.4
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-17T03:12:00Z",
+      "time": "2026-11-17T04:24:00Z",
       "gustHour": false,
-      "wind": 14,
-      "dir": 120,
-      "gust": 18,
-      "tempC": 6.8
+      "wind": 11,
+      "dir": 130,
+      "gust": 16,
+      "tempC": 7.7
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-17T03:12:00Z",
+      "time": "2026-11-17T04:24:00Z",
       "gustHour": false,
       "wind": 17,
-      "dir": 110,
+      "dir": 120,
       "gust": 23,
-      "tempC": 6.3
+      "tempC": 7
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-17T03:06:00Z",
+      "time": "2026-11-17T04:18:00Z",
       "gustHour": false,
-      "wind": 10,
-      "dir": 120,
-      "gust": 14,
-      "tempC": 9.4
+      "wind": 5,
+      "dir": 130,
+      "gust": 7,
+      "tempC": 10.8
     }
   ]
 }
