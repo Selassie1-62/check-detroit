@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-17T07:09:45.252Z",
+  "updatedAt": "2026-11-17T08:37:35.706Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-17T07:06:00Z",
+      "time": "2026-11-17T08:30:00Z",
       "gustHour": false,
-      "wind": 28,
-      "dir": 190,
-      "gust": 40,
-      "tempC": 13.6
+      "wind": 39,
+      "dir": 240,
+      "gust": 47,
+      "tempC": 13
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-17T07:06:00Z",
+      "time": "2026-11-17T08:30:00Z",
       "gustHour": false,
-      "wind": 21,
-      "dir": 200,
-      "gust": 34,
-      "tempC": 14
+      "wind": 23,
+      "dir": 250,
+      "gust": 33,
+      "tempC": 13.7
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-17T07:06:00Z",
+      "time": "2026-11-17T08:30:00Z",
       "gustHour": false,
-      "wind": 11,
-      "dir": 150,
-      "gust": 15,
-      "tempC": 11.9
+      "wind": 24,
+      "dir": 240,
+      "gust": 37,
+      "tempC": 14.8
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-17T07:00:00Z",
+      "time": "2026-11-17T08:30:00Z",
       "gustHour": false,
-      "wind": 13,
-      "dir": 150,
-      "gust": 18,
-      "tempC": 11.5
+      "wind": 12,
+      "dir": 220,
+      "gust": 23,
+      "tempC": 14.3
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-17T07:00:00Z",
+      "time": "2026-11-17T08:24:00Z",
       "gustHour": false,
-      "wind": 9,
-      "dir": 190,
-      "gust": 13,
-      "tempC": 14.1
+      "wind": 15,
+      "dir": 260,
+      "gust": 27,
+      "tempC": 14.2
     }
   ]
 }
