@@ -277,7 +277,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=14";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=16";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -357,9 +357,10 @@ function renderNow(kg) {
     const st = c.wdir == null ? null : shoreType(c.wdir, s.facing);
     const p = evalProne(c, s), w = evalWing(c, s, kg);
     const runs = RUNS.filter((r) => r.spot === s.id).map((r) => ({ r, e: evalDownwind(c, r) })).filter((x) => x.e.level !== "no");
-    const v = [verdict(day ? p.level : "no", "Surf foil"), verdict(day ? w.level : "no", w.gear && w.level !== "no" ? w.gear.label : "Wing / parawing")];
+    const v = [verdict(day ? p.level : "no", "Surf foil")];
+    if (!s.proneOnly) v.push(verdict(day ? w.level : "no", w.gear && w.level !== "no" ? w.gear.label : "Wing / parawing"));
     runs.forEach(({ r, e }) => v.push(verdict(day ? e.level : "no", `DW ${r.name}${e.gear ? ` (${e.gear.label.replace("Parawing", "parawing")})` : ""}`)));
-    if (!runs.length) v.push(verdict("no", "Downwind"));
+    if (!runs.length && !s.proneOnly) v.push(verdict("no", "Downwind"));
     return `<article class="card"><h3>${s.name}</h3>
       <dl class="kv">
         <dt>Vent</dt><dd>${r0(c.wind)} nds (raf. ${r0(c.gust)}) ${compass(c.wdir)}${st ? " · " + st.label : ""}</dd>
@@ -419,9 +420,9 @@ function renderDetail() {
 const per = (L) => [L.Tpeak, L.Tz].find((x) => x != null && x <= 20) ?? null; // > 20 s : valeur aberrante (bateau-feu)
 // ---------- Homespot ----------
 // Sémaphores et bouées les plus utiles pour chaque spot.
-const STATIONS_FOR = { hardelot: ["touquet", "boulogne"], equihen: ["boulogne"], boulogne: ["boulogne"], wimereux: ["boulogne", "grisnez"],
+const STATIONS_FOR = { hardelot: ["touquet", "boulogne"], equihen: ["boulogne"], boulogne: ["boulogne"], creche: ["boulogne"], wimereux: ["boulogne", "grisnez"],
   wissant: ["grisnez", "calais"], sangatte: ["calais", "grisnez"], calais: ["calais", "dunkerque"] };
-const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], wimereux: ["HASTINGSWN", "SCILLY", "62305"],
+const BUOYS_FOR = { hardelot: ["HASTINGSWN", "62305"], equihen: ["HASTINGSWN", "62305"], boulogne: ["HASTINGSWN", "62305"], creche: ["HASTINGSWN", "SCILLY", "62305"], wimereux: ["HASTINGSWN", "SCILLY", "62305"],
   wissant: ["62304", "WGABBARD"], sangatte: ["62304", "WGABBARD"], calais: ["62304", "WGABBARD"] };
 // Flèche dans le sens où va le vent : la pointe est dessinée vers le bas (vent du N → vers le S), puis tournée de la provenance, avec le texte « vient du … » à côté pour lever toute ambiguïté.
 const arrowSvg = (from, cls = "arrow") => from == null ? "" :
@@ -553,7 +554,7 @@ async function renderBrief(force) {
   if (!state.spots || !S) return;
   const req = ++briefReq;
   try {
-    if (!briefMod) briefMod = await import("./briefing.js?v=14");
+    if (!briefMod) briefMod = await import("./briefing.js?v=16");
     if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
       $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
       ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };

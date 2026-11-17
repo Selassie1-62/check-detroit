@@ -5,9 +5,18 @@ export const SPOTS = [
   { id: "hardelot", name: "Hardelot", short: "Hardelot", lat: 50.635, lon: 1.54, facing: 275, current: { flood: 0, lagH: 2 } },
   { id: "equihen", name: "Équihen · Le Portel", short: "Équihen", lat: 50.68, lon: 1.53, facing: 270, current: { flood: 0, lagH: 2 } },
   { id: "boulogne", name: "Boulogne-sur-Mer", short: "Boulogne", lat: 50.735, lon: 1.55, facing: 290, current: { flood: 0, lagH: 2 } },
+  // La Crèche (rade de Boulogne, connaissance locale de Henry, 17/11/2026) : capte la houle d'ouest, marche surtout sur la
+  // deuxième partie du descendant ; abritée du vent de NW par la digue nord. Surf foil uniquement.
+  { id: "creche", name: "Boulogne · La Crèche (rade)", short: "La Crèche", lat: 50.745, lon: 1.57, facing: 270, proneOnly: true,
+    current: { flood: 0, lagH: 2 }, shelter: { wind: [285, 350], label: "abrité par la digue nord" },
+    tideProne: { from: 180, to: 400, label: "deuxième partie du descendant (PM +3 h → BM)" },
+    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
   // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
   { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270, current: { flood: 0, lagH: 2 },
-    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
+    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
+    // Lendemain de coup de vent d'W : mer du vent résiduelle (5-8 s) quand le vent retombe. Cas du 16/11/2026 : Hastings 0,8-0,9 m,
+    // vent d'W/WNW tombé à 8-13 nds, « sympa sur le début du descendant ». Calage sur un seul cas : à affiner.
+    windseaAlso: { sector: [200, 320], goHs: 0.8, goT: 5, maybeHs: 0.5, maybeT: 4.5, windMax: 11 } },
   { id: "wissant", name: "Wissant · Tardinghen", short: "Wissant", lat: 50.92, lon: 1.64, facing: 315 },
   { id: "sangatte", name: "Sangatte · Blériot", short: "Sangatte", lat: 50.98, lon: 1.78, facing: 335 },
   // Calais vit de la mer du vent de mer du Nord (N à E), pas de la houle atlantique, et marche en fin de montant.
@@ -214,7 +223,8 @@ export function evalProne(c, spot) {
   const swh = c.swh ?? 0, swp = c.swp ?? c.tm ?? 0, swd = c.swd ?? c.wwd;
   const exp = swd == null ? 0.6 : (() => { const d = angDiff(swd, spot.facing); return d <= 45 ? 1 : d <= 75 ? 0.6 : d <= 100 ? 0.25 : 0; })();
   const heff = swh * exp, P = power(heff, swp);
-  const st = c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
+  const sheltered = spot.shelter && c.wdir != null && inRange(c.wdir, spot.shelter.wind);
+  const st = sheltered ? { key: "off", label: spot.shelter.label } : c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
   const w = c.wind ?? 0;
   const clean = w < 8 || ((st.key === "off" || st.key === "sideoff") && w <= 18) || (st.key === "side" && w <= 11);
   const messy = (st.key === "on" || st.key === "sideon") && w >= 12;
@@ -222,6 +232,17 @@ export function evalProne(c, spot) {
   let level = "no";
   if (P >= T.goPower && swp >= T.goPeriod && clean && heff <= T.maxHs) level = "go";
   else if (P >= T.maybePower && swp >= T.maybePeriod && !messy && heff <= T.maxHs + 0.5) level = "maybe";
+  // Mer du vent résiduelle (réglage par spot) : mer totale du secteur, vent retombé
+  const WA = spot.windseaAlso;
+  let extraWhy = null;
+  if (WA && level !== "go") {
+    const hs = c.hs ?? 0, tm = c.tm ?? 0, d = c.wd ?? c.wwd;
+    const calm = w <= WA.windMax || ((st.key === "off" || st.key === "sideoff") && w <= 18);
+    if (d != null && inRange(d, WA.sector) && calm) {
+      const lv = hs >= WA.goHs && tm >= WA.goT && w <= WA.windMax - 2 ? "go" : hs >= WA.maybeHs && tm >= WA.maybeT ? "maybe" : "no";
+      if (LV[lv] > LV[level]) { level = lv; extraWhy = `mer du vent résiduelle ${round(hs)} m · ${round(tm, 1)} s ${compass(d)}, vent retombé`; }
+    }
+  }
   // Petite houle longue + vent propre (réglage par spot)
   const LS = spot.longSwell;
   if (LS && clean && swp >= LS.minT) {
@@ -229,6 +250,14 @@ export function evalProne(c, spot) {
     else if (heff >= LS.maybeHs && level === "no") { level = "maybe"; }
   }
   const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
+  if (extraWhy) why.unshift(extraWhy);
+  // Fenêtre de marée propre au spot (ex. La Crèche : deuxième partie du descendant)
+  if (spot.tideProne && level !== "no") {
+    const TP = spot.tideProne;
+    if (c.pmMin == null) why.push("marée inconnue");
+    else if (c.pmMin < TP.from || c.pmMin > TP.to) { level = c.pmMin >= TP.from - 60 && c.pmMin <= TP.to + 30 ? "maybe" : "no"; why.push(`marée : vise la ${TP.label}`); }
+    else why.push(`bonne marée : ${TP.label}`);
+  }
   if (heff > T.maxHs) why.push("trop gros");
   const foil = level === "no" ? null : foilFor("prone", { heff, T: swp });
   if (foil) why.push(`foil ${foil.label}${foil.note ? ` — ${foil.note}` : ""}`);
@@ -242,7 +271,8 @@ function evalProneWindsea(c, spot) {
   const hs = c.hs ?? 0, tm = c.tm ?? 0, d = c.wd ?? c.wwd ?? c.swd;
   const exp = d == null ? 0.6 : inRange(d, Z.sector) ? 1 : 0.3;
   const heff = hs * exp, P = power(heff, tm);
-  const st = c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
+  const sheltered = spot.shelter && c.wdir != null && inRange(c.wdir, spot.shelter.wind);
+  const st = sheltered ? { key: "off", label: spot.shelter.label } : c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
   const w = c.wind ?? 0;
   const clean = w < 8 || ((st.key === "off" || st.key === "sideoff") && w <= 18) || (st.key === "side" && w <= Z.sideMax);
   const messy = (st.key === "on" || st.key === "sideon") && w >= 14;
@@ -361,7 +391,7 @@ export function evalHour(spotId, h, days, weight = 75) {
   const day = isDay(h.t, days);
   const items = [
     { kind: "prone", label: "Surf foil", ...evalProne(h.c, s) },
-    { kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) },
+    ...(s.proneOnly ? [] : [{ kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) }]),
     ...RUNS.filter((r) => r.spot === spotId).map((r) => ({ kind: "downwind", label: `Downwind ${r.name}`, run: r.id, ...evalDownwind(h.c, r) })),
   ].map((x) => (day ? x : { ...x, level: "no" }));
   const best = items.reduce((m, x) => (LV[x.level] > LV[m.level] || (LV[x.level] === LV[m.level] && (x.score ?? 0) > (m.score ?? 0)) ? x : m), items[0]);
@@ -393,7 +423,7 @@ export function analyse(spots, days, { now = new Date(), weight = 75, horizonH =
   SPOTS.forEach((s) => {
     const hrs = spots[s.id].hours;
     wins.push(...windowsFrom(hrs, (c) => evalProne(c, s), { kind: "prone", label: "Surf foil", where: s.short, spot: s.id }, days, nowIso, endIso));
-    wins.push(...windowsFrom(hrs, (c) => evalWing(c, s, weight), { kind: "wing", label: "Wing", where: s.short, spot: s.id }, days, nowIso, endIso));
+    if (!s.proneOnly) wins.push(...windowsFrom(hrs, (c) => evalWing(c, s, weight), { kind: "wing", label: "Wing", where: s.short, spot: s.id }, days, nowIso, endIso));
   });
   RUNS.forEach((r) => {
     wins.push(...windowsFrom(spots[r.spot].hours, (c) => evalDownwind(c, r), { kind: "downwind", label: "Downwind", where: r.name, run: r.id, spot: r.spot }, days, nowIso, endIso));
