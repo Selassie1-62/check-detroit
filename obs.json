@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-17T13:45:42.499Z",
+  "updatedAt": "2026-11-17T14:52:09.965Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-17T13:42:00Z",
+      "time": "2026-11-17T14:48:00Z",
       "gustHour": false,
-      "wind": 36,
-      "dir": 240,
-      "gust": 44,
-      "tempC": 13.1
+      "wind": 35,
+      "dir": 250,
+      "gust": 43,
+      "tempC": 11.8
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-17T13:42:00Z",
+      "time": "2026-11-17T14:48:00Z",
       "gustHour": false,
-      "wind": 25,
-      "dir": 230,
-      "gust": 36,
-      "tempC": 12.7
+      "wind": 20,
+      "dir": 250,
+      "gust": 31,
+      "tempC": 10.8
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-17T13:42:00Z",
+      "time": "2026-11-17T14:48:00Z",
       "gustHour": false,
       "wind": 22,
       "dir": 240,
-      "gust": 32,
-      "tempC": 13.7
+      "gust": 30,
+      "tempC": 12.2
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-17T13:36:00Z",
+      "time": "2026-11-17T14:48:00Z",
       "gustHour": false,
-      "wind": 17,
+      "wind": 13,
       "dir": 240,
-      "gust": 27,
-      "tempC": 14.3
+      "gust": 28,
+      "tempC": 13.7
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-17T13:36:00Z",
+      "time": "2026-11-17T14:42:00Z",
       "gustHour": false,
-      "wind": 14,
-      "dir": 270,
-      "gust": 24,
-      "tempC": 11.8
+      "wind": 17,
+      "dir": 230,
+      "gust": 29,
+      "tempC": 13.5
     }
   ]
 }
