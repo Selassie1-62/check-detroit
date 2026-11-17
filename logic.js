@@ -407,7 +407,8 @@ function windowsFrom(hours, evalFn, meta, days, nowIso, endIso) {
     if (h.t.slice(0, 13) < nowIso.slice(0, 13) || h.t.slice(0, 13) > end) return;
     const e = isDay(h.t, days) ? evalFn(h.c) : { level: "no" };
     if (e.level !== "no") {
-      if (!cur) cur = { ...meta, start: h.t, end: h.t, best: e, level: e.level, conf: confidence(h.c), hours: 0 };
+      if (!cur) cur = { ...meta, start: h.t, end: h.t, best: e, level: e.level, conf: confidence(h.c), hours: 0, wdirs: [] };
+      if (h.c.wdir != null) cur.wdirs.push(h.c.wdir);
       cur.end = h.t; cur.hours++;
       if (LV[e.level] > LV[cur.level]) cur.level = e.level;
       if ((e.score ?? 0) > (cur.best.score ?? 0)) { cur.best = e; cur.conf = confidence(h.c); cur.peak = h.t; }

@@ -17,7 +17,13 @@ console.log(`Modèles vent ${okW}/4, vagues ${okV}/4`);
 if (!okW || !okV) { console.error("Données insuffisantes, pas d'alerte."); process.exit(0); }
 
 const spots = buildHours(raw);
-const wins = analyse(spots, daylight(raw.sun), { weight: WEIGHT }).filter((w) => w.level === "go" && KINDS.includes(w.kind));
+// Préférence de Henry (17/11/2026) : pas d'alerte wing ni downwind par vent de secteur nord (NW à NE, 315-45°).
+// Le surf foil reste alerté (ex. houle de nord à Calais).
+const north = (d) => d >= 315 || d <= 45;
+const mostlyNorth = (w) => w.wdirs && w.wdirs.length && w.wdirs.filter(north).length / w.wdirs.length >= 0.5;
+const wins = analyse(spots, daylight(raw.sun), { weight: WEIGHT })
+  .filter((w) => w.level === "go" && KINDS.includes(w.kind))
+  .filter((w) => !((w.kind === "wing" || w.kind === "downwind") && mostlyNorth(w)));
 
 let sent = {};
 try { sent = JSON.parse(await readFile(STATE_FILE, "utf8")); } catch {}
