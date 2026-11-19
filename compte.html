@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mon compte · Check Détroit</title>
+<meta name="theme-color" content="#10232e">
+<link rel="apple-touch-icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef2f1; --card: #ffffff; --ink: #10232e; --muted: #56676e; --line: #d3dcdb;
+  --sea: #1b6a7a; --sea-ink: #ffffff; --go: #2c8a57; --maybe: #b9801a; --bad: #c0392b;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Source Sans 3", -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c171d; --card: #13232b; --ink: #e6eef0; --muted: #93a6ad; --line: #24363f;
+  --sea: #3fa3b5; --sea-ink: #04151b; --go: #4cc283; --maybe: #e2a93e; --bad: #ff7b6b; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-left, 0px)) 48px; display: grid; gap: 22px; }
+h1, h2 { font-family: var(--display); font-weight: 700; margin: 0; }
+h1 { font-size: 2.2rem; line-height: 1; } h2 { font-size: 1.4rem; }
+a { color: var(--sea); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+label { display: grid; gap: 4px; font-weight: 600; font-size: .92rem; }
+input, select, textarea { font: 16px var(--body); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; min-width: 0; max-width: 100%; }
+input[type="datetime-local"] { -webkit-appearance: none; appearance: none; min-height: 44px; }
+.row > * { min-width: 0; }
+textarea { min-height: 70px; resize: vertical; }
+.row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-weight: 400; }
+.checks label { display: flex; gap: 6px; align-items: center; font-weight: 400; }
+.checks input { width: auto; }
+button { font: 700 1rem var(--body); padding: 11px 18px; border-radius: 999px; border: 0; background: var(--sea); color: var(--sea-ink); cursor: pointer; justify-self: start; }
+button.ghost { background: none; color: var(--sea); border: 1px solid var(--line); }
+button.small { padding: 4px 10px; font-size: .85rem; }
+.stars { display: flex; gap: 4px; } .stars button { background: none; border: 1px solid var(--line); color: var(--muted); padding: 6px 10px; }
+.stars button[aria-pressed="true"] { background: var(--maybe); color: #fff; border-color: var(--maybe); }
+.msg { min-height: 1.2em; font-size: .92rem; } .msg.ok { color: var(--go); } .msg.err { color: var(--bad); }
+.muted { color: var(--muted); font-size: .9rem; }
+.list { display: grid; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.list li { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+.list .top { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 700; }
+.rate { color: var(--maybe); letter-spacing: 1px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Mon compte</h1>
+    <p class="muted"><a href="./">← Retour au Check</a></p>
+  </header>
+
+  <section class="card" id="noconf" hidden>
+    <h2>Pas encore branché</h2>
+    <p class="muted">La base du groupe n'est pas encore configurée (fichier <code>config.js</code>).</p>
+  </section>
+
+  <section class="card" id="login" hidden>
+    <h2>Connexion</h2>
+    <p class="muted">Groupe sur invitation. Entre l'e-mail avec lequel tu as été invité : tu reçois un lien de connexion, sans mot de passe.</p>
+    <label>E-mail <input type="email" id="email" autocomplete="email" required></label>
+    <button type="button" id="send">Recevoir le lien</button>
+    <p class="msg" id="login-msg" role="status"></p>
+  </section>
+
+  <div id="app" hidden style="display:grid;gap:22px">
+    <section class="card">
+      <h2>Ma session</h2>
+      <p class="muted">20 secondes après l'eau : ça cale les seuils du site pour tout le groupe.</p>
+      <div class="row">
+        <label>Spot <select id="s-spot"></select></label>
+        <label>Date et heure de début <input type="datetime-local" id="s-when"></label>
+      </div>
+      <div class="row">
+        <label>Discipline
+          <select id="s-disc">
+            <option value="prone">Surf foil</option><option value="wing">Wing</option><option value="parawing">Parawing</option>
+            <option value="downwind">Downwind</option><option value="kite">Surf kite</option><option value="surf">Surf</option>
+          </select></label>
+        <label>Taille des vagues
+          <select id="s-size">
+            <option value="">—</option><option value="flat">Plat</option><option value="cheville">Cheville</option><option value="genou">Genou</option>
+            <option value="cuisse">Cuisse</option><option value="taille">Taille</option><option value="poitrine">Poitrine</option>
+            <option value="tete">Tête</option><option value="plus">Plus</option>
+          </select></label>
+      </div>
+      <div><span style="font-weight:600;font-size:.92rem">Note</span>
+        <div class="stars" id="s-rate" role="group" aria-label="Note de 1 à 5"></div></div>
+      <label>Matériel utilisé <input id="s-gear" maxlength="120" placeholder="ex. Nomad 3 m² · SF 830 / S145v2"></label>
+      <label>Commentaire <textarea id="s-comment" maxlength="500" placeholder="ex. mieux formé en fin de session, courant contre le vent"></textarea></label>
+      <button type="button" id="s-save">Enregistrer la session</button>
+      <p class="msg" id="s-msg" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Journal du groupe</h2>
+      <ul class="list" id="feed"><li class="muted">Chargement…</li></ul>
+    </section>
+
+    <section class="card">
+      <h2>Mon profil</h2>
+      <div class="row">
+        <label>Pseudo <input id="p-pseudo" maxlength="30"></label>
+        <label>Spot favori <select id="p-spot"></select></label>
+        <label>Poids (kg) <input id="p-kg" type="number" min="30" max="150" inputmode="numeric"></label>
+      </div>
+      <div><span style="font-weight:600;font-size:.92rem">Disciplines</span>
+        <div class="checks" id="p-disc"></div></div>
+      <button type="button" id="p-save">Enregistrer le profil</button>
+      <p class="msg" id="p-msg" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Mon matériel</h2>
+      <p class="muted">Bientôt utilisé par le site pour te conseiller ta voile et ton foil, comme pour Henry.</p>
+      <ul class="list" id="gear"></ul>
+      <div class="row">
+        <label>Type <select id="g-type"><option value="wing">Wing</option><option value="parawing">Parawing</option><option value="kite">Kite</option><option value="foil">Foil</option><option value="board">Planche</option></select></label>
+        <label>Modèle <input id="g-model" maxlength="60" placeholder="ex. Cabrinha Nomad"></label>
+        <label>Taille <input id="g-size" inputmode="decimal" placeholder="m², cm² ou L"></label>
+      </div>
+      <div class="row">
+        <label>Vent mini (nds) <input id="g-min" type="number" min="0" max="60" inputmode="numeric"></label>
+        <label>Vent maxi (nds) <input id="g-max" type="number" min="0" max="70" inputmode="numeric"></label>
+      </div>
+      <button type="button" class="ghost" id="g-add">Ajouter</button>
+      <p class="msg" id="g-msg" role="status"></p>
+    </section>
+
+    <p class="muted" id="who"></p>
+    <button type="button" class="ghost" id="logout">Se déconnecter</button>
+  </div>
+</main>
+
+<script type="module">
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=1";
+import { SPOTS } from "./logic.js?v=21";
+
+const $ = (id) => document.getElementById(id);
+const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const say = (id, txt, ok = true) => { $(id).textContent = txt; $(id).className = "msg " + (ok ? "ok" : "err"); };
+const DISC = { prone: "Surf foil", wing: "Wing", parawing: "Parawing", downwind: "Downwind", kite: "Surf kite", surf: "Surf" };
+const SIZE = { flat: "plat", cheville: "cheville", genou: "genou", cuisse: "cuisse", taille: "taille", poitrine: "poitrine", tete: "tête", plus: "plus" };
+const spotName = (id) => SPOTS.find((s) => s.id === id)?.short || id;
+
+for (const sel of [$("s-spot"), $("p-spot")]) SPOTS.forEach((s) => sel.add(new Option(s.name, s.id)));
+Object.entries(DISC).forEach(([k, v]) => $("p-disc").insertAdjacentHTML("beforeend", `<label><input type="checkbox" value="${k}"> ${v}</label>`));
+let rating = 0;
+for (let i = 1; i <= 5; i++) $("s-rate").insertAdjacentHTML("beforeend", `<button type="button" data-r="${i}" aria-pressed="false">${i}★</button>`);
+$("s-rate").addEventListener("click", (e) => { const b = e.target.closest("[data-r]"); if (!b) return; rating = +b.dataset.r;
+  $("s-rate").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.r <= rating))); });
+const localIso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+$("s-when").value = localIso(new Date(Date.now() - 2 * 3600e3));
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { $("noconf").hidden = false; throw new Error("config.js vide"); }
+const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm");
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: true } });
+let user = null;
+
+$("send").addEventListener("click", async () => {
+  const email = $("email").value.trim();
+  if (!email) return say("login-msg", "Entre ton e-mail.", false);
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.href.split("#")[0] } });
+  if (error) say("login-msg", /signups|not allowed|not found/i.test(error.message) ? "Cet e-mail n'est pas invité. Demande à Henry de t'ajouter." : "Erreur : " + error.message, false);
+  else say("login-msg", "Lien envoyé. Ouvre l'e-mail sur ce téléphone et touche le lien.");
+});
+$("logout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+async function loadProfile() {
+  const { data } = await sb.from("profiles").select("*").eq("id", user.id).single();
+  if (!data) return;
+  $("p-pseudo").value = data.pseudo || ""; $("p-spot").value = data.home_spot || "wimereux"; $("p-kg").value = data.weight_kg ?? "";
+  $("p-disc").querySelectorAll("input").forEach((c) => { c.checked = (data.disciplines || []).includes(c.value); });
+  $("s-spot").value = data.home_spot || "wimereux";
+  try { localStorage.setItem("home", JSON.stringify(data.home_spot)); if (data.weight_kg) localStorage.setItem("kg", JSON.stringify(data.weight_kg)); } catch {}
+}
+$("p-save").addEventListener("click", async () => {
+  const disciplines = [...$("p-disc").querySelectorAll("input:checked")].map((c) => c.value);
+  const kg = $("p-kg").value ? +$("p-kg").value : null;
+  const { error } = await sb.from("profiles").update({ pseudo: $("p-pseudo").value.trim() || "rider", home_spot: $("p-spot").value, weight_kg: kg, disciplines, updated_at: new Date().toISOString() }).eq("id", user.id);
+  if (error) return say("p-msg", "Erreur : " + error.message, false);
+  try { localStorage.setItem("home", JSON.stringify($("p-spot").value)); if (kg) localStorage.setItem("kg", JSON.stringify(kg)); } catch {}
+  say("p-msg", "Profil enregistré. Ton spot favori s'ouvre maintenant en premier sur le Check.");
+});
+
+async function loadGear() {
+  const { data } = await sb.from("gear").select("*").order("type").order("size");
+  $("gear").innerHTML = (data || []).map((g) => `<li><span class="top"><span>${esc(g.type)} · ${esc(g.model)} ${g.size ?? ""}</span>
+    <button type="button" class="ghost small" data-del="${g.id}">Retirer</button></span>
+    <span class="muted">${g.wind_min != null || g.wind_max != null ? `${g.wind_min ?? "?"} à ${g.wind_max ?? "?"} nds` : ""}</span></li>`).join("") || `<li class="muted">Rien pour l'instant.</li>`;
+}
+$("gear").addEventListener("click", async (e) => { const b = e.target.closest("[data-del]"); if (!b) return;
+  await sb.from("gear").delete().eq("id", +b.dataset.del); loadGear(); });
+$("g-add").addEventListener("click", async () => {
+  const model = $("g-model").value.trim(); if (!model) return say("g-msg", "Indique le modèle.", false);
+  const num = (v) => (v === "" ? null : Number(String(v).replace(",", ".")));
+  const { error } = await sb.from("gear").insert({ type: $("g-type").value, model, size: num($("g-size").value), wind_min: num($("g-min").value), wind_max: num($("g-max").value) });
+  if (error) return say("g-msg", "Erreur : " + error.message, false);
+  ["g-model", "g-size", "g-min", "g-max"].forEach((id) => ($(id).value = "")); say("g-msg", "Ajouté."); loadGear();
+});
+
+// Mesures du moment rattachées à la session si elle date de moins de 3 h (sinon le robot les complétera plus tard).
+async function measuresFor(whenMs) {
+  if (Date.now() - whenMs > 3 * 3600e3 || whenMs > Date.now() + 3600e3) return null;
+  const get = async (f) => { try { const r = await fetch(f + "?t=" + Date.now()); return r.ok ? r.json() : null; } catch { return null; } };
+  const [obs, buoys] = await Promise.all([get("obs.json"), get("bouees.json")]);
+  return { capturedAt: new Date().toISOString(),
+    wind: (obs?.stations || []).filter((s) => s.wind != null).map((s) => ({ key: s.key, wind: s.wind, gust: s.gust, dir: s.dir, time: s.time })),
+    buoys: (buoys?.buoys || []).filter((b) => b.last).map((b) => ({ id: b.id, label: b.label, ...b.last })) };
+}
+$("s-save").addEventListener("click", async () => {
+  if (!rating) return say("s-msg", "Mets une note de 1 à 5.", false);
+  const whenMs = new Date($("s-when").value).getTime();
+  if (!whenMs) return say("s-msg", "Indique la date et l'heure.", false);
+  $("s-save").disabled = true;
+  const row = { spot: $("s-spot").value, started_at: new Date(whenMs).toISOString(), discipline: $("s-disc").value, size_label: $("s-size").value || null,
+    rating, gear_used: $("s-gear").value.trim() || null, comment: $("s-comment").value.trim() || null, measures: await measuresFor(whenMs) };
+  const { error } = await sb.from("sessions").insert(row);
+  $("s-save").disabled = false;
+  if (error) return say("s-msg", "Erreur : " + error.message, false);
+  say("s-msg", "Session enregistrée, merci !"); $("s-comment").value = ""; loadFeed();
+});
+
+async function loadFeed() {
+  const { data, error } = await sb.from("sessions_feed").select("*").order("started_at", { ascending: false }).limit(40);
+  if (error) { $("feed").innerHTML = `<li class="muted">Journal indisponible.</li>`; return; }
+  $("feed").innerHTML = (data || []).map((s) => {
+    const d = new Date(s.started_at).toLocaleString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return `<li><span class="top"><span>${esc(s.pseudo)} · ${esc(spotName(s.spot))} · ${esc(DISC[s.discipline] || s.discipline)}</span>
+      <span class="rate" aria-label="${s.rating} sur 5">${"★".repeat(s.rating)}${"☆".repeat(5 - s.rating)}</span></span>
+      <span class="muted">${d}${s.size_label ? " · " + esc(SIZE[s.size_label]) : ""}${s.gear_used ? " · " + esc(s.gear_used) : ""}</span>
+      ${s.comment ? `<span>${esc(s.comment)}</span>` : ""}
+      ${s.user_id === user.id ? `<button type="button" class="ghost small" data-delsession="${s.id}" style="justify-self:start">Supprimer</button>` : ""}</li>`;
+  }).join("") || `<li class="muted">Aucune session pour l'instant. Sois le premier !</li>`;
+}
+$("feed").addEventListener("click", async (e) => { const b = e.target.closest("[data-delsession]"); if (!b) return;
+  await sb.from("sessions").delete().eq("id", +b.dataset.delsession); loadFeed(); });
+
+async function show(session) {
+  user = session?.user || null;
+  $("login").hidden = !!user; $("app").hidden = !user;
+  if (!user) return;
+  $("who").textContent = "Connecté : " + user.email;
+  await Promise.all([loadProfile(), loadGear(), loadFeed()]);
+}
+sb.auth.onAuthStateChange((_e, session) => show(session));
+show((await sb.auth.getSession()).data.session);
+</script>
+</body>
+</html>
