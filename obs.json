@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-19T01:02:42.468Z",
+  "updatedAt": "2026-11-19T02:29:39.871Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-19T00:54:00Z",
+      "time": "2026-11-19T02:24:00Z",
       "gustHour": false,
-      "wind": 22,
-      "dir": 180,
-      "gust": 28,
-      "tempC": 10.5
+      "wind": 28,
+      "dir": 240,
+      "gust": 35,
+      "tempC": 10
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-19T00:48:00Z",
+      "time": "2026-11-19T02:24:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 170,
-      "gust": 22,
-      "tempC": 10
+      "wind": 17,
+      "dir": 260,
+      "gust": 31,
+      "tempC": 9.8
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-19T00:54:00Z",
+      "time": "2026-11-19T02:24:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 180,
-      "gust": 17,
-      "tempC": 10.3
+      "wind": 19,
+      "dir": 240,
+      "gust": 28,
+      "tempC": 9.4
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-19T00:54:00Z",
+      "time": "2026-11-19T02:24:00Z",
       "gustHour": false,
-      "wind": 11,
-      "dir": 160,
-      "gust": 16,
-      "tempC": 10.3
+      "wind": 13,
+      "dir": 170,
+      "gust": 19,
+      "tempC": 10.1
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-19T00:48:00Z",
+      "time": "2026-11-19T02:18:00Z",
       "gustHour": false,
-      "wind": 7,
-      "dir": 180,
-      "gust": 10,
-      "tempC": 10.4
+      "wind": 13,
+      "dir": 240,
+      "gust": 27,
+      "tempC": 11
     }
   ]
 }
