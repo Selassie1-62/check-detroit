@@ -11,6 +11,10 @@ export const SPOTS = [
     current: { flood: 0, lagH: 2 }, shelter: { wind: [285, 350], label: "abrité par la digue nord" },
     tideProne: { from: 180, to: 400, label: "deuxième partie du descendant (PM +3 h → BM)" },
     longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
+  // Rade de Boulogne : plan B de Henry par vent d'W plein onshore et grosse mer (barre infranchissable sur les plages).
+  // Plan d'eau abrité derrière les digues : wing / parawing / kite, pas de vagues.
+  { id: "rade", name: "Boulogne · rade (plan B vent d'ouest)", short: "Rade Boulogne", lat: 50.727, lon: 1.585, facing: 280,
+    flat: true, shelter: { wind: [200, 330], label: "abrité dans la rade" }, kinds: ["wing", "kite"] },
   // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
   { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270, current: { flood: 0, lagH: 2 },
     longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
@@ -54,7 +58,10 @@ export const THRESHOLDS = {
   prone: { goPower: 1.5, goPeriod: 8, maybePower: 0.8, maybePeriod: 6.5, maxHs: 2.2 },
   downwind: { paddle: 18, wing: 15, maxMean: 28, maxGust: 32, bumpsHs: 0.6, bumpsT: 4.5 },
   wing: { min: 12, max: 28, maxGust: 34 },
+  kite: { min: 18, max: 35, maxGust: 42, minHs: 0.8 }, // surf kite, Cabrinha Drifter 5 m² : 20 à 35 nds (Henry, 19/11/2026)
 };
+// Barre : par vent plein onshore et grosse mer, impassable en wing / parawing, pénible en kite (Henry, 18-19/11/2026).
+const barre = (st, c) => (st.key === "on" && (c.hs ?? 0) >= 1.5) ? "full" : (st.key === "sideon" && (c.hs ?? 0) >= 1.8) ? "hard" : null;
 
 const WIND_VARS = "wind_speed_10m,wind_direction_10m,wind_gusts_10m";
 const WAVE_VARS = "wave_height,wave_period,wave_direction,wind_wave_height,wind_wave_period,wind_wave_direction,swell_wave_height,swell_wave_period,swell_wave_direction";
@@ -321,14 +328,18 @@ export function evalDownwind(c, run) {
 export function evalWing(c, spot, weight) {
   const T = THRESHOLDS.wing; const w = c.wind ?? 0, g = c.gust ?? w;
   if (c.wdir == null) return { level: "no", why: [] };
-  const st = shoreType(c.wdir, spot.facing);
+  const shel = spot.shelter && inRange(c.wdir, spot.shelter.wind);
+  const st = shel ? { key: "side", label: spot.shelter.label } : shoreType(c.wdir, spot.facing);
   const safe = !(st.key === "off" || st.key === "sideoff");
   let level = "no";
   if (safe && w >= T.min + 2 && w <= T.max && g <= T.maxGust) level = "go";
   else if (safe && w >= T.min && w <= T.max + 2 && g <= T.maxGust + 4) level = "maybe";
+  const br = spot.flat ? null : barre(st, c);
   const gear = gearFor(w, g, { swell: (c.swh ?? 0) >= 0.4 || (c.hs ?? 0) >= 0.7, kg: weight });
   const why = [`${round(w, 0)} nds (raf. ${round(g, 0)}) ${compass(c.wdir)} ${st.label}`];
   if (gear) why.push(gear.label + (gear.note ? ` (${gear.note})` : ""));
+  if (br === "full" && level !== "no") { level = "no"; why.unshift(`barre infranchissable (onshore, mer ${round(c.hs)} m) : plan B rade de Boulogne`); }
+  else if (br === "hard" && level === "go") { level = "maybe"; why.unshift(`barre difficile (mer ${round(c.hs)} m)`); }
   const foil = gear ? foilFor(gear.type, { wind: w }) : null;
   if (foil) why.push(`foil ${foil.label}${foil.note ? ` — ${foil.note}` : ""}`);
   return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w)), size: gear?.size ?? wingSize(w, weight), gear, foil, why };
@@ -342,6 +353,24 @@ export const QUIVER = {
   parawing: [{ size: 3.8, min: 15, max: 20 }, { size: 3, min: 20, max: 25 }, { size: 2.5, min: 25, max: 40 }],
 };
 const m2 = (x) => String(x).replace(".", ",") + " m²";
+// Surf kite : Cabrinha Drifter 5 m² + surf Skill it 5'3 (Henry). Dans la rade : navigation à plat.
+export function evalKite(c, spot) {
+  const T = THRESHOLDS.kite, w = c.wind ?? 0, g = c.gust ?? w;
+  if (c.wdir == null) return { level: "no", why: [] };
+  const shel = spot.shelter && inRange(c.wdir, spot.shelter.wind);
+  const st = shel ? { key: "side", label: spot.shelter.label } : shoreType(c.wdir, spot.facing);
+  const safe = !(st.key === "off" || st.key === "sideoff");
+  const hs = c.hs ?? 0, waves = spot.flat || hs >= T.minHs;
+  let level = "no";
+  if (safe && waves && w >= T.min + 2 && w <= T.max && g <= T.maxGust) level = "go";
+  else if (safe && waves && w >= T.min && w <= T.max + 2 && g <= T.maxGust + 4) level = "maybe";
+  const why = [`${round(w, 0)} nds (raf. ${round(g, 0)}) ${compass(c.wdir)} ${st.label}`, spot.flat ? "plan d'eau abrité, sans vagues" : `mer ${round(hs)} m`, "Drifter 5 m² · Skill it 5'3"];
+  const br = spot.flat ? null : barre(st, c);
+  if (br && level !== "no") { level = br === "full" ? "no" : "maybe"; why.unshift(br === "full" ? `barre très dure (onshore, mer ${round(hs)} m) : peu de plaisir, plan B rade` : "barre difficile"); }
+  if (!waves && !spot.flat) why.push("pas assez de vagues pour le surf kite");
+  return { level, score: level === "no" ? 0 : Math.round(50 + Math.min(30, w) + hs * 5), why };
+}
+
 export function gearFor(w, g, { swell = false, parawingOnly = false, kg = 75 } = {}) {
   if (w == null || w < (parawingOnly ? 13 : QUIVER.wing.min)) return null;
   const Q = QUIVER, gg = g ?? w;
@@ -386,12 +415,16 @@ export const wingSize = (kt, kg = 75) => {
 };
 
 // Toutes les disciplines d'un spot pour une heure donnée (homespot, barre des 3 jours, carte).
+// Disciplines proposées sur un spot : liste explicite (kinds) ou, par défaut, tout sauf restriction proneOnly.
+export const spotHas = (s, k) => (s.kinds ? s.kinds.includes(k) : k === "prone" || !s.proneOnly);
+
 export function evalHour(spotId, h, days, weight = 75) {
   const s = SPOTS.find((x) => x.id === spotId);
   const day = isDay(h.t, days);
   const items = [
-    { kind: "prone", label: "Surf foil", ...evalProne(h.c, s) },
-    ...(s.proneOnly ? [] : [{ kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) }]),
+    ...(spotHas(s, "prone") ? [{ kind: "prone", label: "Surf foil", ...evalProne(h.c, s) }] : []),
+    ...(spotHas(s, "wing") ? [{ kind: "wing", label: "Wing", ...evalWing(h.c, s, weight) }] : []),
+    ...(spotHas(s, "kite") ? [{ kind: "kite", label: "Surf kite", ...evalKite(h.c, s) }] : []),
     ...RUNS.filter((r) => r.spot === spotId).map((r) => ({ kind: "downwind", label: `Downwind ${r.name}`, run: r.id, ...evalDownwind(h.c, r) })),
   ].map((x) => (day ? x : { ...x, level: "no" }));
   const best = items.reduce((m, x) => (LV[x.level] > LV[m.level] || (LV[x.level] === LV[m.level] && (x.score ?? 0) > (m.score ?? 0)) ? x : m), items[0]);
@@ -423,8 +456,9 @@ export function analyse(spots, days, { now = new Date(), weight = 75, horizonH =
   const wins = [];
   SPOTS.forEach((s) => {
     const hrs = spots[s.id].hours;
-    wins.push(...windowsFrom(hrs, (c) => evalProne(c, s), { kind: "prone", label: "Surf foil", where: s.short, spot: s.id }, days, nowIso, endIso));
-    if (!s.proneOnly) wins.push(...windowsFrom(hrs, (c) => evalWing(c, s, weight), { kind: "wing", label: "Wing", where: s.short, spot: s.id }, days, nowIso, endIso));
+    if (spotHas(s, "prone")) wins.push(...windowsFrom(hrs, (c) => evalProne(c, s), { kind: "prone", label: "Surf foil", where: s.short, spot: s.id }, days, nowIso, endIso));
+    if (spotHas(s, "wing")) wins.push(...windowsFrom(hrs, (c) => evalWing(c, s, weight), { kind: "wing", label: "Wing", where: s.short, spot: s.id }, days, nowIso, endIso));
+    if (spotHas(s, "kite")) wins.push(...windowsFrom(hrs, (c) => evalKite(c, s), { kind: "kite", label: "Surf kite", where: s.short, spot: s.id }, days, nowIso, endIso));
   });
   RUNS.forEach((r) => {
     wins.push(...windowsFrom(spots[r.spot].hours, (c) => evalDownwind(c, r), { kind: "downwind", label: "Downwind", where: r.name, run: r.id, spot: r.spot }, days, nowIso, endIso));
