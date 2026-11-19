@@ -10,7 +10,8 @@ export const SPOTS = [
   { id: "creche", name: "Boulogne · La Crèche (rade)", short: "La Crèche", lat: 50.745, lon: 1.57, facing: 270, proneOnly: true,
     current: { flood: 0, lagH: 2 }, shelter: { wind: [285, 350], label: "abrité par la digue nord" },
     tideProne: { from: 180, to: 400, label: "deuxième partie du descendant (PM +3 h → BM)" },
-    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 } },
+    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
+    swellSector: [255, 290] }, // uniquement par houle d'OUEST (Henry, 19/11/2026)
   // Rade de Boulogne : plan B de Henry par vent d'W plein onshore et grosse mer (barre infranchissable sur les plages).
   // Plan d'eau abrité derrière les digues : wing / parawing / kite, pas de vagues.
   { id: "rade", name: "Boulogne · rade (plan B vent d'ouest)", short: "Rade Boulogne", lat: 50.727, lon: 1.585, facing: 280,
@@ -18,6 +19,9 @@ export const SPOTS = [
   // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
   { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270, current: { flood: 0, lagH: 2 },
     longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
+    // Marée (Henry, 19/11/2026) : priorité à la fin du montant et surtout au début du descendant. Fenêtre « douce » :
+    // hors de la fenêtre, le GO est ramené à Limite (pas exclu).
+    tideProne: { from: -120, to: 150, soft: true, label: "fin du montant et début du descendant (PM −2 h → PM +2 h 30)" },
     // Lendemain de coup de vent d'W : mer du vent résiduelle (5-8 s) quand le vent retombe. Cas du 16/11/2026 : Hastings 0,8-0,9 m,
     // vent d'W/WNW tombé à 8-13 nds, « sympa sur le début du descendant ». Calage sur un seul cas : à affiner.
     windseaAlso: { sector: [200, 320], goHs: 0.8, goT: 5, maybeHs: 0.5, maybeT: 4.5, windMax: 11 } },
@@ -228,7 +232,8 @@ const confidence = (c) => {
 export function evalProne(c, spot) {
   if (spot.windsea) return evalProneWindsea(c, spot);
   const swh = c.swh ?? 0, swp = c.swp ?? c.tm ?? 0, swd = c.swd ?? c.wwd;
-  const exp = swd == null ? 0.6 : (() => { const d = angDiff(swd, spot.facing); return d <= 45 ? 1 : d <= 75 ? 0.6 : d <= 100 ? 0.25 : 0; })();
+  const outSector = spot.swellSector && swd != null && !inRange(swd, spot.swellSector);
+  const exp = outSector ? 0 : swd == null ? 0.6 : (() => { const d = angDiff(swd, spot.facing); return d <= 45 ? 1 : d <= 75 ? 0.6 : d <= 100 ? 0.25 : 0; })();
   const heff = swh * exp, P = power(heff, swp);
   const sheltered = spot.shelter && c.wdir != null && inRange(c.wdir, spot.shelter.wind);
   const st = sheltered ? { key: "off", label: spot.shelter.label } : c.wdir == null ? { key: "side" } : shoreType(c.wdir, spot.facing);
@@ -258,11 +263,16 @@ export function evalProne(c, spot) {
   }
   const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (extraWhy) why.unshift(extraWhy);
+  if (outSector) why.unshift(`houle de ${compass(swd)} : ne rentre pas (houle d'ouest uniquement)`);
   // Fenêtre de marée propre au spot (ex. La Crèche : deuxième partie du descendant)
   if (spot.tideProne && level !== "no") {
     const TP = spot.tideProne;
     if (c.pmMin == null) why.push("marée inconnue");
-    else if (c.pmMin < TP.from || c.pmMin > TP.to) { level = c.pmMin >= TP.from - 60 && c.pmMin <= TP.to + 30 ? "maybe" : "no"; why.push(`marée : vise la ${TP.label}`); }
+    else if (c.pmMin < TP.from || c.pmMin > TP.to) {
+      if (TP.soft) { if (level === "go") level = "maybe"; }
+      else level = c.pmMin >= TP.from - 60 && c.pmMin <= TP.to + 30 ? "maybe" : "no";
+      why.push(`marée : vise la ${TP.label}`);
+    }
     else why.push(`bonne marée : ${TP.label}`);
   }
   if (heff > T.maxHs) why.push("trop gros");
