@@ -276,6 +276,12 @@ export function evalProne(c, spot) {
   const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (extraWhy) why.unshift(extraWhy);
   if (outSector) why.unshift(`houle de ${compass(swd)} : ne rentre pas (houle d'ouest uniquement)`);
+  // Mer saturée (Wimereux, 20/11/2026 8 h : 1,7 m dont 1,4 m de mer du vent à 5 s sur 1,1 m de houle à 12,7 s →
+  // « ultra brouillon, vagues très rapprochées, déferlent très loin du bord, presque impraticable »).
+  if (!spot.windsea && level !== "no" && (c.hs ?? 0) >= 1.5 && (c.wwh ?? 0) >= 0.8 * (c.swh ?? 0)) {
+    level = (c.hs ?? 0) >= 2 ? "no" : "maybe";
+    why.unshift(`mer saturée : ${round(c.hs)} m dont ${round(c.wwh)} m de mer du vent, vagues rapprochées qui cassent loin`);
+  }
   // Fenêtre de marée propre au spot (ex. La Crèche : deuxième partie du descendant)
   if (spot.tideProne && level !== "no") {
     const TP = spot.tideProne;
