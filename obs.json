@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-20T08:39:11.907Z",
+  "updatedAt": "2026-11-20T09:57:11.180Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-20T08:30:00Z",
+      "time": "2026-11-20T09:48:00Z",
       "gustHour": false,
-      "wind": 7,
-      "dir": 70,
-      "gust": 9,
-      "tempC": 8.9
+      "wind": 15,
+      "dir": 30,
+      "gust": 18,
+      "tempC": 9.4
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-20T08:36:00Z",
+      "time": "2026-11-20T09:42:00Z",
       "gustHour": false,
-      "wind": 5,
-      "dir": 160,
-      "gust": 6,
-      "tempC": 9.2
+      "wind": 8,
+      "dir": 50,
+      "gust": 13,
+      "tempC": 8.8
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-20T08:30:00Z",
+      "time": "2026-11-20T09:54:00Z",
       "gustHour": false,
-      "wind": 2,
-      "dir": 170,
-      "gust": 2,
-      "tempC": 8.4
+      "wind": 4,
+      "dir": 150,
+      "gust": 5,
+      "tempC": 8.6
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-20T08:30:00Z",
+      "time": "2026-11-20T09:48:00Z",
       "gustHour": false,
-      "wind": 1,
-      "dir": 160,
-      "gust": 2,
-      "tempC": 9.3
+      "wind": 5,
+      "dir": 20,
+      "gust": 6,
+      "tempC": 9.9
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-20T08:30:00Z",
+      "time": "2026-11-20T09:42:00Z",
       "gustHour": false,
-      "wind": 4,
-      "dir": 170,
-      "gust": 6,
-      "tempC": 9.4
+      "wind": 5,
+      "dir": 140,
+      "gust": 7,
+      "tempC": 9.8
     }
   ]
 }
