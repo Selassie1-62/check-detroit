@@ -1,6 +1,4 @@
 {
-  "downwind|wimereux-audresselles|2026-11-15|rappel": 1794726821655,
-  "downwind|hardelot-portel|2026-11-15|rappel": 1794726821655,
   "downwind|gn-sangatte|2026-11-19": 1794878505105,
   "downwind|hardelot-portel|2026-11-17|rappel": 1794900563439,
   "prone|hardelot|2026-11-20": 1794952807604,
@@ -17,5 +15,8 @@
   "prone|equihen|2026-11-23": 1795147338045,
   "prone|boulogne|2026-11-23": 1795147338045,
   "prone|wimereux|2026-11-23": 1795147338045,
-  "prone|calais|2026-11-23": 1795147338045
+  "prone|calais|2026-11-23": 1795147338045,
+  "prone|creche|2026-11-23": 1795159684876,
+  "prone|wimereux|2026-11-20|rappel": 1795159684876,
+  "prone|hardelot|2026-11-20|rappel": 1795159684876
 }
