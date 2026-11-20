@@ -1,7 +1,7 @@
 // Robot d'alertes : lancé par GitHub Actions toutes les 3 h.
 // Envoie une notification ntfy pour chaque NOUVELLE fenêtre GO (surf foil ou downwind) dans les 3 jours, puis un rappel le matin même.
 import { readFile, writeFile } from "node:fs/promises";
-import { fetchAll, buildHours, analyse, daylight } from "./logic.js";
+import { fetchAll, buildHours, analyse, daylight, toLocalIso } from "./logic.js";
 
 const TOPIC = process.env.NTFY_TOPIC;           // secret du dépôt : nom du canal ntfy
 const SITE = process.env.SITE_URL || "";         // adresse du site, ouverte au clic sur la notification
@@ -17,6 +17,30 @@ console.log(`Modèles vent ${okW}/4, vagues ${okV}/4`);
 if (!okW || !okV) { console.error("Données insuffisantes, pas d'alerte."); process.exit(0); }
 
 const spots = buildHours(raw);
+
+// Prévision publiée dans le dépôt (prevision.json) : la même que celle du site (AROME 1,3 km seul pour le vent et
+// ICON-EWAM seul pour les vagues à moins de 24 h), lisible depuis GitHub pour les « check » faits avec Claude.
+{
+  const r = (x, d = 1) => (x == null ? null : Math.round(x * 10 ** d) / 10 ** d);
+  const nowIso = toLocalIso(new Date()).slice(0, 13); // heure locale de Paris, comme les données
+  const prev = { generatedAt: new Date().toISOString(), note: "Heures locales (Europe/Paris). Consensus pondéré : AROME 1,3 km seul pour le vent et ICON-EWAM seul pour les vagues à moins de 24 h.",
+    models: { wind: raw.wind.filter((x) => x.data).map((x) => x.model.label), wave: raw.wave.filter((x) => x.data).map((x) => x.model.label) },
+    spots: {} };
+  for (const [id, sp] of Object.entries(spots)) {
+    prev.spots[id] = {
+      name: sp.spot.name, facing: sp.spot.facing,
+      tides: sp.tides.filter((x) => x.t.slice(0, 13) >= nowIso).slice(0, 8).map((x) => ({ t: x.t, type: x.type, h: r(x.h, 2) })),
+      hours: sp.hours.filter((h) => h.t.slice(0, 13) >= nowIso.slice(0, 13)).slice(0, 54).map((h) => ({
+        t: h.t, wind: r(h.c.wind, 0), gust: r(h.c.gust, 0), wdir: r(h.c.wdir, 0),
+        hs: r(h.c.hs, 2), tm: r(h.c.tm), wd: r(h.c.wd, 0), swh: r(h.c.swh, 2), swp: r(h.c.swp), swd: r(h.c.swd, 0),
+        wwh: r(h.c.wwh, 2), wwp: r(h.c.wwp), tide: r(h.tide, 2), sst: r(h.sst), pmMin: h.c.pmMin ?? null,
+        conf: h.c.windSpread != null ? r(h.c.windSpread, 0) : null,
+      })),
+    };
+  }
+  await writeFile("prevision.json", JSON.stringify(prev) + "\n");
+  console.log("prevision.json écrit :", Object.keys(prev.spots).length, "spots");
+}
 // Préférence de Henry (17/11/2026) : pas d'alerte wing ni downwind par vent de secteur nord (NW à NE, 315-45°).
 // Le surf foil reste alerté (ex. houle de nord à Calais).
 const north = (d) => d >= 315 || d <= 45;

@@ -171,17 +171,29 @@ export function buildHours(raw) {
     if (sd) sd.time.forEach((t, k) => { const o = slot(t); o.tide = sd.sea_level_height_msl ? sd.sea_level_height_msl[k] : null; o.sst = sd.sea_surface_temperature ? sd.sea_surface_temperature[k] : null; });
 
     const hours = [...byTime.values()].sort((a, b) => (a.t < b.t ? -1 : 1)).map((h) => {
-      const w = WIND_MODELS.filter((m) => h.wind[m.key]);
-      const v = WAVE_MODELS.filter((m) => h.wave[m.key]);
-      const W = (f) => w.map((m) => ({ v: h.wind[m.key][f], w: m.weight }));
-      const V = (f) => v.map((m) => ({ v: h.wave[m.key][f], w: m.weight }));
+      let w = WIND_MODELS.filter((m) => h.wind[m.key]);
+      let v = WAVE_MODELS.filter((m) => h.wave[m.key]);
+      const wAll = w, vAll = v; // la confiance reste calculée sur l'accord entre tous les modèles
+      // Poids selon l'échéance (règle de Henry, 19/11/2026) :
+      // - vent à moins de 24 h : AROME 1,3 km SEUL (le plus précis d'expérience) ; les autres ne servent que s'il manque ;
+      //   24-36 h : AROME dominant ; au-delà : poids de base.
+      // - vagues à moins de 24 h : ICON-EWAM SEUL (le plus juste face à la bouée d'Ambleteuse, 5 fois sur 6 en octobre) ;
+      //   24-48 h : EWAM dominant ; au-delà : poids de base.
+      const leadH = (Date.parse(h.t + ":00") - Date.now()) / 3600e3;
+      const only = (list, key) => (list.some((m) => m.key === key) ? list.filter((m) => m.key === key) : list);
+      if (leadH <= 24) { w = only(w, "arome"); v = only(v, "ewam"); }
+      const WSHORT = { arome: 4, icond2: 1.5, ecmwf: 0.7, gfs: 0.2 }, VSHORT = { ewam: 4, mfwam: 1, ecwam: 0.7, gfswave: 0.2 };
+      const wW = (m) => (leadH <= 36 ? WSHORT[m.key] ?? m.weight : m.weight);
+      const vW = (m) => (leadH <= 48 ? VSHORT[m.key] ?? m.weight : m.weight);
+      const W = (f) => w.map((m) => ({ v: h.wind[m.key][f], w: wW(m) }));
+      const V = (f) => v.map((m) => ({ v: h.wave[m.key][f], w: vW(m) }));
       h.c = {
         wind: wmean(W("s")), gust: wmean(W("g")), wdir: wdir(W("d")),
         hs: wmean(V("hs")), tm: wmean(V("t")), wd: wdir(V("dir")),
         wwh: wmean(V("wwh")), wwp: wmean(V("wwp")), wwd: wdir(V("wwd")),
         swh: wmean(V("swh")), swp: wmean(V("swp")), swd: wdir(V("swd")),
-        nWind: w.length, nWave: v.length,
-        windSpread: spread(w.map((m) => h.wind[m.key].s)), hsSpread: spread(v.map((m) => h.wave[m.key].hs)),
+        nWind: wAll.length, nWave: vAll.length, windModel: w.length === 1 ? w[0].label : null, waveModel: v.length === 1 ? v[0].label : null,
+        windSpread: spread(wAll.map((m) => h.wind[m.key].s)), hsSpread: spread(vAll.map((m) => h.wave[m.key].hs)),
       };
       return h;
     });
