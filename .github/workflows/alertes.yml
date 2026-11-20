@@ -32,5 +32,5 @@ jobs:
         run: |
           git config user.name "check-detroit-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add alerts-state.json
+          git add alerts-state.json prevision.json
           git diff --cached --quiet || (git commit -m "Alertes envoyées" && git pull --rebase && git push)
