@@ -10,7 +10,7 @@ export const SPOTS = [
   { id: "creche", name: "Boulogne · La Crèche (rade)", short: "La Crèche", lat: 50.745, lon: 1.57, facing: 270, proneOnly: true,
     current: { flood: 0, lagH: 2 }, shelter: { wind: [285, 350], label: "abrité par la digue nord" },
     tideProne: { from: 180, to: 400, label: "deuxième partie du descendant (PM +3 h → BM)" },
-    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
+    longSwell: { minT: 9, maybeHs: 0.15, goHs: 0.4 },
     swellSector: [255, 290] }, // uniquement par houle d'OUEST (Henry, 19/11/2026)
   // Rade de Boulogne : plan B de Henry par vent d'W plein onshore et grosse mer (barre infranchissable sur les plages).
   // Plan d'eau abrité derrière les digues : wing / parawing / kite, pas de vagues.
@@ -18,7 +18,7 @@ export const SPOTS = [
     flat: true, shelter: { wind: [200, 330], label: "abrité dans la rade" }, kinds: ["wing", "kite"] },
   // Prone : à Wimereux, une petite houle longue suffit avec vent de terre (sessions du 31/10 : 0,15 m / 11,6 s et du 11/11 : ~0,35 m / 11-12 s).
   { id: "wimereux", name: "Wimereux · La Rochette · Pointe aux Oies", short: "Wimereux", lat: 50.81, lon: 1.54, facing: 270, current: { flood: 0, lagH: 2 },
-    longSwell: { minT: 10, maybeHs: 0.15, goHs: 0.4 },
+    longSwell: { minT: 9, maybeHs: 0.15, goHs: 0.4 },
     // Marée (Henry, 19/11/2026) : priorité à la fin du montant et surtout au début du descendant. Fenêtre « douce » :
     // hors de la fenêtre, le GO est ramené à Limite (pas exclu).
     tideProne: { from: -120, to: 150, soft: true, label: "fin du montant et début du descendant (PM −2 h → PM +2 h 30)" },
@@ -74,6 +74,7 @@ const SEA_VARS = "sea_level_height_msl,sea_surface_temperature";
 // ---------- utilitaires ----------
 export const angDiff = (a, b) => { const d = Math.abs(((a - b) % 360 + 540) % 360 - 180); return d; };
 export const inRange = (dir, [a, b]) => (a <= b ? dir >= a && dir <= b : dir >= a || dir <= b);
+export const SWP_BIAS = 2.5; // s, correction de période EWAM (houle d'ouest, < 24 h)
 export const power = (hs, t) => 0.49 * hs * hs * t; // kW/m
 const round = (x, n = 1) => (x == null || Number.isNaN(x) ? null : Math.round(x * 10 ** n) / 10 ** n);
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
@@ -195,6 +196,14 @@ export function buildHours(raw) {
         nWind: wAll.length, nWave: vAll.length, windModel: w.length === 1 ? w[0].label : null, waveModel: v.length === 1 ? v[0].label : null,
         windSpread: spread(wAll.map((m) => h.wind[m.key].s)), hsSpread: spread(vAll.map((m) => h.wave[m.key].hs)),
       };
+      // Biais de période d'EWAM sur la houle d'ouest (bouée d'Ambleteuse) : 20/11 7 s prévus contre 12,7 s mesurés,
+      // 21/11 6,9 s prévus contre 9,9 s mesurés. EWAM garde la hauteur ; la période de houle prend le plus long
+      // des autres modèles de vagues, et au moins EWAM + 2,5 s.
+      if (v.length === 1 && v[0].key === "ewam" && h.c.swp != null && h.c.swd != null && inRange(h.c.swd, [200, 300])) {
+        const others = vAll.filter((m) => m.key !== "ewam").map((m) => h.wave[m.key].swp).filter((x) => x != null);
+        const fixed = Math.max(h.c.swp + SWP_BIAS, ...others);
+        if (fixed > h.c.swp) { h.c.swpRaw = h.c.swp; h.c.swp = fixed; }
+      }
       return h;
     });
     const tides = tideExtremes(hours);
@@ -273,7 +282,7 @@ export function evalProne(c, spot) {
     if (heff >= LS.goHs) level = "go";
     else if (heff >= LS.maybeHs && level === "no") { level = "maybe"; }
   }
-  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
+  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}${c.swpRaw != null ? ` (EWAM ${round(c.swpRaw, 0)} s, corrigé)` : ""}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (extraWhy) why.unshift(extraWhy);
   if (outSector) why.unshift(`houle de ${compass(swd)} : ne rentre pas (houle d'ouest uniquement)`);
   // Mer saturée (Wimereux, 20/11/2026 8 h : 1,7 m dont 1,4 m de mer du vent à 5 s sur 1,1 m de houle à 12,7 s →
