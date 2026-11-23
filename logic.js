@@ -55,6 +55,8 @@ export const WIND_MODELS = [
 ];
 export const WAVE_MODELS = [
   { key: "ewam", label: "ICON-EWAM", ids: ["ewam", "dwd_ewam"], weight: 2.0 },
+  // MARC (Ifremer, WW3 NORGAS 2') : relevé par le robot marc.mjs dans marc.json. À égalité avec EWAM (choix de Henry, 23/11/2026).
+  { key: "marc", label: "MARC Ifremer", ids: [], file: "marc.json", weight: 2.0 },
   { key: "mfwam", label: "MFWAM", ids: ["meteofrance_wave"], weight: 1.4 },
   { key: "ecwam", label: "ECMWF-WAM", ids: ["ecmwf_wam", "ecmwf_wam025"], weight: 1.0 },
   { key: "gfswave", label: "GFS-Wave", ids: ["ncep_gfswave025", "ncep_gfswave016"], weight: 0.4 },
@@ -76,7 +78,7 @@ const SEA_VARS = "sea_level_height_msl,sea_surface_temperature";
 // ---------- utilitaires ----------
 export const angDiff = (a, b) => { const d = Math.abs(((a - b) % 360 + 540) % 360 - 180); return d; };
 export const inRange = (dir, [a, b]) => (a <= b ? dir >= a && dir <= b : dir >= a || dir <= b);
-export const SWP_BIAS = 2.5; // s, correction de période EWAM (houle d'ouest, < 24 h)
+export const SWP_BIAS = 2.5; // s, correction de période de houle EWAM (houle d'ouest)
 export const power = (hs, t) => 0.49 * hs * hs * t; // kW/m
 const round = (x, n = 1) => (x == null || Number.isNaN(x) ? null : Math.round(x * 10 ** n) / 10 ** n);
 const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
@@ -115,12 +117,23 @@ async function fetchModel(base, vars, model, extra) {
   return { model, error: String(lastErr && lastErr.message || lastErr) };
 }
 
+// Fichier publié dans le dépôt par un robot (marc.json) : lu sur le site par l'URL, et par le robot d'alertes sur le disque.
+async function fetchLocal(model) {
+  try {
+    let j;
+    if (typeof window === "undefined") { const fs = await import("node:fs/promises"); j = JSON.parse(await fs.readFile(model.file, "utf8")); }
+    else j = await getJSON(`./${model.file}?t=${Date.now()}`);
+    if (!j.spots || Date.now() - Date.parse(j.generatedAt) > 36 * 3600e3) throw new Error("fichier absent ou trop ancien");
+    return { model, id: model.file, local: j, data: true };
+  } catch (e) { return { model, error: String(e.message || e) }; }
+}
+
 export async function fetchAll() {
   const W = "https://api.open-meteo.com/v1/forecast";
   const M = "https://marine-api.open-meteo.com/v1/marine";
   const jobs = [
     ...WIND_MODELS.map((m) => fetchModel(W, WIND_VARS, m, "&wind_speed_unit=kn")),
-    ...WAVE_MODELS.map((m) => fetchModel(M, WAVE_VARS, m)),
+    ...WAVE_MODELS.map((m) => (m.file ? fetchLocal(m) : fetchModel(M, WAVE_VARS, m))),
   ];
   const lat = SPOTS.map((s) => s.lat).join(","), lon = SPOTS.map((s) => s.lon).join(",");
   const sea = getJSON(`${M}?latitude=${lat}&longitude=${lon}&hourly=${SEA_VARS}&timezone=Europe%2FParis&forecast_days=4`).catch((e) => ({ error: String(e.message) }));
@@ -158,6 +171,17 @@ export function buildHours(raw) {
       });
     });
     raw.wave.forEach((r) => {
+      if (r.local) { // MARC : partitions WW3 (ws = mer du vent, sw1 = houle principale)
+        (r.local.spots[s.id] || []).forEach((x) => {
+          if (x.hs == null) return;
+          slot(x.t).wave[r.model.key] = {
+            hs: x.hs, t: x.tm, dir: x.dir,
+            wwh: x.ws ? x.ws.h : 0, wwp: x.ws ? x.ws.t : null, wwd: x.ws ? x.ws.d : null,
+            swh: x.sw1 ? x.sw1.h : 0, swp: x.sw1 ? x.sw1.t : null, swd: x.sw1 ? x.sw1.d : null,
+          };
+        });
+        return;
+      }
       const d = r.data && r.data[i]; if (!d || !d.hourly) return;
       const h = d.hourly;
       h.time.forEach((t, k) => {
@@ -174,6 +198,10 @@ export function buildHours(raw) {
     if (sd) sd.time.forEach((t, k) => { const o = slot(t); o.tide = sd.sea_level_height_msl ? sd.sea_level_height_msl[k] : null; o.sst = sd.sea_surface_temperature ? sd.sea_surface_temperature[k] : null; });
 
     const hours = [...byTime.values()].sort((a, b) => (a.t < b.t ? -1 : 1)).map((h) => {
+      // Biais de période d'EWAM sur la houle d'ouest (bouée d'Ambleteuse) : 20/11 7 s prévus contre 12,7 s mesurés,
+      // 21/11 6,9 contre 9,9 s, 23/11 7,3 contre 10,0 s → période de houle EWAM + 2,5 s quand elle vient du 200-300°.
+      const E = h.wave.ewam;
+      if (E && E.swp != null && E.swd != null && inRange(E.swd, [200, 300])) h.wave.ewam = { ...E, swpRaw: E.swp, swp: E.swp + SWP_BIAS };
       let w = WIND_MODELS.filter((m) => h.wind[m.key]);
       let v = WAVE_MODELS.filter((m) => h.wave[m.key]);
       const wAll = w, vAll = v; // la confiance reste calculée sur l'accord entre tous les modèles
@@ -184,8 +212,10 @@ export function buildHours(raw) {
       //   24-48 h : EWAM dominant ; au-delà : poids de base.
       const leadH = (Date.parse(h.t + ":00") - Date.now()) / 3600e3;
       const only = (list, key) => (list.some((m) => m.key === key) ? list.filter((m) => m.key === key) : list);
-      if (leadH <= 24) { w = only(w, "arome"); v = only(v, "ewam"); }
-      const WSHORT = { arome: 4, icond2: 1.5, ecmwf: 0.7, gfs: 0.2 }, VSHORT = { ewam: 4, mfwam: 1, ecwam: 0.7, gfswave: 0.2 };
+      // Vagues à moins de 24 h : ICON-EWAM et MARC Ifremer à égalité (les autres seulement s'ils manquent tous les deux).
+      const best = v.filter((m) => m.key === "ewam" || m.key === "marc");
+      if (leadH <= 24) { w = only(w, "arome"); if (best.length) v = best; }
+      const WSHORT = { arome: 4, icond2: 1.5, ecmwf: 0.7, gfs: 0.2 }, VSHORT = { ewam: 4, marc: 4, mfwam: 1, ecwam: 0.7, gfswave: 0.2 };
       const wW = (m) => (leadH <= 36 ? WSHORT[m.key] ?? m.weight : m.weight);
       const vW = (m) => (leadH <= 48 ? VSHORT[m.key] ?? m.weight : m.weight);
       const W = (f) => w.map((m) => ({ v: h.wind[m.key][f], w: wW(m) }));
@@ -195,17 +225,10 @@ export function buildHours(raw) {
         hs: wmean(V("hs")), tm: wmean(V("t")), wd: wdir(V("dir")),
         wwh: wmean(V("wwh")), wwp: wmean(V("wwp")), wwd: wdir(V("wwd")),
         swh: wmean(V("swh")), swp: wmean(V("swp")), swd: wdir(V("swd")),
-        nWind: wAll.length, nWave: vAll.length, windModel: w.length === 1 ? w[0].label : null, waveModel: v.length === 1 ? v[0].label : null,
+        nWind: wAll.length, nWave: vAll.length, windModel: w.length === 1 ? w[0].label : null, waveModel: v.length <= 2 ? v.map((m) => m.label).join(" + ") : null,
+        swpBy: Object.fromEntries(best.map((m) => [m.key, h.wave[m.key].swp])),
         windSpread: spread(wAll.map((m) => h.wind[m.key].s)), hsSpread: spread(vAll.map((m) => h.wave[m.key].hs)),
       };
-      // Biais de période d'EWAM sur la houle d'ouest (bouée d'Ambleteuse) : 20/11 7 s prévus contre 12,7 s mesurés,
-      // 21/11 6,9 s prévus contre 9,9 s mesurés. EWAM garde la hauteur ; la période de houle prend le plus long
-      // des autres modèles de vagues, et au moins EWAM + 2,5 s.
-      if (v.length === 1 && v[0].key === "ewam" && h.c.swp != null && h.c.swd != null && inRange(h.c.swd, [200, 300])) {
-        const others = vAll.filter((m) => m.key !== "ewam").map((m) => h.wave[m.key].swp).filter((x) => x != null);
-        const fixed = Math.max(h.c.swp + SWP_BIAS, ...others);
-        if (fixed > h.c.swp) { h.c.swpRaw = h.c.swp; h.c.swp = fixed; }
-      }
       return h;
     });
     const tides = tideExtremes(hours);
@@ -293,7 +316,7 @@ export function evalProne(c, spot) {
     if (heff >= LS.goHs) level = "go";
     else if (heff >= LS.maybeHs && level === "no") { level = "maybe"; }
   }
-  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}${c.swpRaw != null ? ` (EWAM ${round(c.swpRaw, 0)} s, corrigé)` : ""}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
+  const why = [`houle ${round(heff)} m · ${round(swp, 0)} s ${compass(swd)}${c.swpBy && c.swpBy.ewam != null && c.swpBy.marc != null ? ` (EWAM ${round(c.swpBy.ewam, 0)} s corrigé, MARC ${round(c.swpBy.marc, 0)} s)` : ""}`, `${round(P)} kW/m`, `vent ${round(w, 0)} nds ${compass(c.wdir)} ${st.label || ""}`.trim()];
   if (extraWhy) why.unshift(extraWhy);
   if (outSector) why.unshift(`houle de ${compass(swd)} : ne rentre pas (houle d'ouest uniquement)`);
   // Mer saturée (Wimereux, 20/11/2026 8 h : 1,7 m dont 1,4 m de mer du vent à 5 s sur 1,1 m de houle à 12,7 s →

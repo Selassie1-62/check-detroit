@@ -138,7 +138,7 @@ button.small { padding: 4px 10px; font-size: .85rem; }
 
 <script type="module">
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js?v=2";
-import { SPOTS } from "./logic.js?v=26";
+import { SPOTS } from "./logic.js?v=27";
 
 const $ = (id) => document.getElementById(id);
 const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

@@ -13,7 +13,7 @@ if (!TOPIC) { console.error("NTFY_TOPIC manquant (Settings > Secrets and variabl
 
 const raw = await fetchAll();
 const okW = raw.wind.filter((r) => r.data).length, okV = raw.wave.filter((r) => r.data).length;
-console.log(`Modèles vent ${okW}/4, vagues ${okV}/4`);
+console.log(`Modèles vent ${okW}/${raw.wind.length}, vagues ${okV}/${raw.wave.length}`);
 if (!okW || !okV) { console.error("Données insuffisantes, pas d'alerte."); process.exit(0); }
 
 const spots = buildHours(raw);
@@ -23,7 +23,7 @@ const spots = buildHours(raw);
 {
   const r = (x, d = 1) => (x == null ? null : Math.round(x * 10 ** d) / 10 ** d);
   const nowIso = toLocalIso(new Date()).slice(0, 13); // heure locale de Paris, comme les données
-  const prev = { generatedAt: new Date().toISOString(), note: "Heures locales (Europe/Paris). Consensus pondéré : AROME 1,3 km seul pour le vent et ICON-EWAM seul pour les vagues à moins de 24 h.",
+  const prev = { generatedAt: new Date().toISOString(), note: "Heures locales (Europe/Paris). Consensus pondéré : AROME 1,3 km seul pour le vent ; ICON-EWAM (période de houle corrigée +2,5 s) et MARC Ifremer à égalité pour les vagues à moins de 24 h.",
     models: { wind: raw.wind.filter((x) => x.data).map((x) => x.model.label), wave: raw.wave.filter((x) => x.data).map((x) => x.model.label) },
     spots: {} };
   for (const [id, sp] of Object.entries(spots)) {

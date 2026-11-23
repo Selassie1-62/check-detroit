@@ -61,10 +61,11 @@ for (const s of SPOTS) {
 let hist = [];
 try { hist = JSON.parse(await readFile("marc.json", "utf8")).hist || []; } catch {}
 try {
-  const now = toLocalIso(new Date()).slice(0, 13);
-  const m = (out.spots.wimereux || []).find((h) => h.t.slice(0, 13) === now);
+  // Heure pleine la plus proche (le premier pas MARC peut être l'heure suivante)
+  const next = toLocalIso(new Date(Date.now() + 30 * 60000)).slice(0, 13);
+  const m = (out.spots.wimereux || []).find((h) => h.t.slice(0, 13) === next) || (out.spots.wimereux || [])[0];
   const prev = JSON.parse(await readFile("prevision.json", "utf8"));
-  const e = (prev.spots?.wimereux?.hours || []).find((h) => h.t.slice(0, 13) === now);
+  const e = m && (prev.spots?.wimereux?.hours || []).find((h) => h.t.slice(0, 13) === m.t.slice(0, 13));
   if (m) hist.push({ t: m.t, marc: { hs: m.hs, tp: m.tp, sw: m.sw1, ws: m.ws }, ewam: e ? { hs: e.hs, swh: e.swh, swp: e.swp, swd: e.swd, wwh: e.wwh } : null });
 } catch (err) { console.log("historique :", err.message); }
 out.hist = hist.slice(-400);

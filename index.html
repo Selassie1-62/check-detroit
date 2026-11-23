@@ -278,7 +278,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, spotHas, evalKite, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=26";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, spotHas, evalKite, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=27";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -559,7 +559,7 @@ async function renderBrief(force) {
   if (!state.spots || !S) return;
   const req = ++briefReq;
   try {
-    if (!briefMod) briefMod = await import("./briefing.js?v=26");
+    if (!briefMod) briefMod = await import("./briefing.js?v=27");
     if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
       $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
       ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };
