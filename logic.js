@@ -21,7 +21,9 @@ export const SPOTS = [
     longSwell: { minT: 9, maybeHs: 0.15, goHs: 0.4 },
     // Marée (Henry, 19/11/2026) : priorité à la fin du montant et surtout au début du descendant. Fenêtre « douce » :
     // hors de la fenêtre, le GO est ramené à Limite (pas exclu).
-    tideProne: { from: -120, to: 150, soft: true, label: "fin du montant et début du descendant (PM −2 h → PM +2 h 30)" },
+    tideProne: { from: -120, to: 150, soft: true, label: "fin du montant et début du descendant (PM −2 h → PM +2 h 30)",
+      // 23/11/2026, coef. 85, PM 10 h 39 : parfait 11 h → 12 h (PM +20 min → +1 h 20), puis plus assez d'eau
+      vives: { range: 6, to: 90, label: "fin du montant et début du descendant, grande marée (PM −2 h → PM +1 h 30)" } },
     // Lendemain de coup de vent d'W : mer du vent résiduelle (5-8 s) quand le vent retombe. Cas du 16/11/2026 : Hastings 0,8-0,9 m,
     // vent d'W/WNW tombé à 8-13 nds, « sympa sur le début du descendant ». Calage sur un seul cas : à affiner.
     windseaAlso: { sector: [200, 320], goHs: 0.8, goT: 5, maybeHs: 0.5, maybeT: 4.5, windMax: 11 } },
@@ -214,19 +216,28 @@ export function buildHours(raw) {
       const t = Date.parse(h.t + ":00Z");
       const near = pms.reduce((m, p) => (Math.abs(p - t) < Math.abs(m - t) ? p : m));
       if (Math.abs(near - t) <= 7 * 3600e3) h.c.pmMin = Math.round((t - near) / 60000);
+      // Marnage (modèle) de la marée en cours : PM la plus proche moins la BM qui la suit (ou la précède)
+      const pm = tides.find((x) => x.type === "PM" && Date.parse(x.t + ":00Z") === near);
+      const i = tides.indexOf(pm), bm = tides[i + 1]?.type === "BM" ? tides[i + 1] : tides[i - 1]?.type === "BM" ? tides[i - 1] : null;
+      if (pm && bm) h.c.range = Math.round((pm.h - bm.h) * 10) / 10;
     });
     spots[s.id] = { spot: s, hours, tides };
   });
   return spots;
 }
 
+export const TIDE_LAG_MIN = 22; // min, retard de phase de la marée du modèle face à l'annuaire
 export function tideExtremes(hours) {
   const out = [];
   for (let k = 1; k < hours.length - 1; k++) {
     const a = hours[k - 1].tide, b = hours[k].tide, c = hours[k + 1].tide;
     if (a == null || b == null || c == null) continue;
-    if (b > a && b >= c) out.push({ t: hours[k].t, type: "PM", h: b });
-    if (b < a && b <= c) out.push({ t: hours[k].t, type: "BM", h: b });
+    if (!((b > a && b >= c) || (b < a && b <= c))) continue;
+    // Heure fine par parabole sur les 3 points horaires, plus le retard de phase du modèle
+    // (23/11/2026 : BM 17 h 41 et PM 23 h 02 à Wimereux, modèle interpolé 17 h 17 et 22 h 40 → +22 min)
+    const den = a - 2 * b + c, off = den ? Math.max(-0.5, Math.min(0.5, (0.5 * (a - c)) / den)) : 0;
+    const ms = Date.parse(hours[k].t + ":00Z") + Math.round(off * 60 + TIDE_LAG_MIN) * 60000;
+    out.push({ t: new Date(ms).toISOString().slice(0, 16), type: b > a ? "PM" : "BM", h: Math.round((b - (0.25 * (a - c) * off)) * 100) / 100 });
   }
   return out;
 }
@@ -293,7 +304,7 @@ export function evalProne(c, spot) {
   }
   // Fenêtre de marée propre au spot (ex. La Crèche : deuxième partie du descendant)
   if (spot.tideProne && level !== "no") {
-    const TP = spot.tideProne;
+    const TP = spot.tideProne.vives && (c.range ?? 0) >= spot.tideProne.vives.range ? { ...spot.tideProne, ...spot.tideProne.vives } : spot.tideProne;
     if (c.pmMin == null) why.push("marée inconnue");
     else if (c.pmMin < TP.from || c.pmMin > TP.to) {
       if (TP.soft) { if (level === "go") level = "maybe"; }

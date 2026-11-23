@@ -278,7 +278,7 @@ section { display: grid; gap: 10px; }
 </div>
 
 <script type="module">
-import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, spotHas, evalKite, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=25";
+import { SPOTS, RUNS, WIND_MODELS, WAVE_MODELS, LV, spotHas, evalKite, fetchAll, buildHours, analyse, daylight, isDay, evalProne, evalDownwind, evalWing, evalHour, shoreType, compass, power, nowHour, wingSize, toLocalIso } from "./logic.js?v=26";
 
 // Vignettes SHOM isolées dans un cadre : leur script ne peut plus bloquer ni casser la page.
 document.querySelectorAll("iframe.shom").forEach((f) => {
@@ -308,6 +308,7 @@ const LBL = { go: "GO", maybe: "Limite", no: "Non" };
 const dayFmt = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", timeZone: "UTC" });
 const fmtDay = (t) => dayFmt.format(new Date(t.slice(0, 10) + "T12:00Z"));
 const hh = (t) => t.slice(11, 13) + "h";
+const hhm = (t) => t.slice(11, 13) + "h" + t.slice(14, 16);
 
 $("kg").value = store.get("kg", 75);
 $("kg").addEventListener("change", () => { store.set("kg", +$("kg").value || 75); if (state.spots) refresh(); });
@@ -417,7 +418,7 @@ function renderDetail() {
   }).join("");
   $("detail").innerHTML = head + `<tbody>${body}</tbody>`;
   const tz = S.tides.filter((x) => x.t >= nowT).slice(0, 4);
-  $("tides").textContent = tz.length ? "Marée (modèle, indicatif) : " + tz.map((x) => `${x.type === "PM" ? "pleine mer" : "basse mer"} ${fmtDay(x.t)} ${hh(x.t)}`).join(" · ") + ". Vérifie sur SHOM." : "";
+  $("tides").textContent = tz.length ? "Marée (modèle, indicatif) : " + tz.map((x) => `${x.type === "PM" ? "pleine mer" : "basse mer"} ${fmtDay(x.t)} ${hhm(x.t)}`).join(" · ") + ". Vérifie sur SHOM." : "";
 }
 
 const per = (L) => [L.Tpeak, L.Tz].find((x) => x != null && x <= 20) ?? null; // > 20 s : valeur aberrante (bateau-feu)
@@ -487,7 +488,7 @@ function renderHero() {
   if (state.spots) {
     const tz = state.spots[id].tides.filter((x) => x.t >= nowHour(state.spots, id).t).slice(0, 2);
     if (tz.length) tiles.push(`<div class="tile"><span class="lab">Marée (modèle, indicatif)</span>
-      <span class="val" style="grid-column:1/-1">${tz.map((x) => `${x.type} ${hh(x.t)}`).join(" · ")}</span>
+      <span class="val" style="grid-column:1/-1">${tz.map((x) => `${x.type} ${hhm(x.t)}`).join(" · ")}</span>
       <span class="more">${S.tide ? `Ce spot marche en ${esc(S.tide.label)}.` : "Heures exactes : vignette SHOM plus bas."}</span></div>`);
   }
   $("hero").innerHTML = `<div class="headline"><h3 class="spotname">${esc(S.short)}</h3><span class="sub2">${esc(S.name)}</span>${headline}</div>
@@ -558,7 +559,7 @@ async function renderBrief(force) {
   if (!state.spots || !S) return;
   const req = ++briefReq;
   try {
-    if (!briefMod) briefMod = await import("./briefing.js?v=25");
+    if (!briefMod) briefMod = await import("./briefing.js?v=26");
     if (force || !ncCache[id] || Date.now() - ncCache[id].at > 10 * 60e3) {
       $("brief-out").innerHTML = `<div class="empty">Briefing en cours…</div>`;
       ncCache[id] = { at: Date.now(), nc: await briefMod.fetchNowcast(S) };

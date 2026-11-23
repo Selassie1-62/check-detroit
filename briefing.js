@@ -1,7 +1,7 @@
 // Beach marshal : le briefing des 3 prochaines heures, juste avant de se mettre à l'eau.
 // Sources : AROME HD (Météo-France, pas de 15 min) via Open-Meteo pour le vent, les rafales et les averses ;
 // marée et température de l'eau du Check ; vent mesuré aux sémaphores pour juger si la prévision colle à la réalité.
-import { compass, shoreType, angDiff, toLocalIso, gearFor } from "./logic.js?v=25";
+import { compass, shoreType, angDiff, toLocalIso, gearFor, TIDE_LAG_MIN } from "./logic.js?v=26";
 
 const W = "https://api.open-meteo.com/v1/forecast";
 const r0 = (x) => Math.round(x);
@@ -31,7 +31,7 @@ function tideTurns(hours) {
     const pm = b > a && b >= c, bm = b < a && b <= c;
     if (!pm && !bm) continue;
     const den = a - 2 * b + c, off = den ? (0.5 * (a - c)) / den : 0; // décalage en heures (-0,5 → +0,5)
-    const t = toLocalIso(new Date(Date.parse(hours[k].t + ":00") + off * 3600e3));
+    const t = toLocalIso(new Date(Date.parse(hours[k].t + ":00") + off * 3600e3 + TIDE_LAG_MIN * 60000));
     out.push({ t, type: pm ? "PM" : "BM", h: b - 0.25 * (a - c) * off });
   }
   return out;
