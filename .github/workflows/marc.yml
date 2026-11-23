@@ -1,0 +1,32 @@
+name: MARC Ifremer (test)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "41 */6 * * *"   # toutes les 6 heures
+
+permissions:
+  contents: write
+
+concurrency:
+  group: depot
+  cancel-in-progress: false
+
+jobs:
+  marc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lire MARC (Ifremer WW3)
+        run: node marc.mjs
+        continue-on-error: true
+      - name: Publier le résultat
+        run: |
+          git config user.name "check-detroit-bot"
+          git config user.email "actions@users.noreply.github.com"
+          [ -f marc.json ] && git add marc.json
+          git diff --cached --quiet || (git commit -m "MARC test" && git pull --rebase && git push)
