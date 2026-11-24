@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-24T21:54:35.382Z",
+  "updatedAt": "2026-11-24T22:54:54.473Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,59 +7,59 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-24T21:48:00Z",
+      "time": "2026-11-24T22:48:00Z",
       "gustHour": false,
-      "wind": 8,
-      "dir": 70,
-      "gust": 10,
-      "tempC": 0.2
+      "wind": 10,
+      "dir": 80,
+      "gust": 14,
+      "tempC": 0.6
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-24T21:48:00Z",
+      "time": "2026-11-24T22:48:00Z",
       "gustHour": false,
-      "wind": 7,
-      "dir": 90,
-      "gust": 11,
-      "tempC": 0.8
+      "wind": 5,
+      "dir": 100,
+      "gust": 9,
+      "tempC": 0.7
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-24T21:48:00Z",
+      "time": "2026-11-24T22:48:00Z",
       "gustHour": false,
-      "wind": 8,
-      "dir": 110,
-      "gust": 11,
-      "tempC": 0
+      "wind": 7,
+      "dir": 100,
+      "gust": 10,
+      "tempC": -0.2
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-24T21:48:00Z",
+      "time": "2026-11-24T22:48:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 100,
-      "gust": 17,
-      "tempC": 1.2
+      "wind": 13,
+      "dir": 110,
+      "gust": 18,
+      "tempC": 1.1
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-24T21:42:00Z",
+      "time": "2026-11-24T22:42:00Z",
       "gustHour": false,
-      "wind": 8,
+      "wind": 6,
       "dir": 120,
-      "gust": 10,
+      "gust": 9,
       "tempC": 1.5
     }
   ]
