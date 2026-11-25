@@ -158,6 +158,16 @@ function wdir(items) { // moyenne vectorielle pondérée d'angles (provenance)
 }
 const spread = (vals) => { const v = vals.filter((x) => x != null); return v.length > 1 ? Math.max(...v) - Math.min(...v) : null; };
 
+// MARC donne deux houles (partitions WW3). On garde celle qui arrive le mieux sur le spot : énergie h²·T
+// pondérée par l'orientation de la plage (24/11/2026 : houle d'ouest + petite mer de nord à Wimereux).
+function pickSwell(parts, facing) {
+  const ok = parts.filter((p) => p && p.h != null);
+  if (!ok.length) return { swh: 0, swp: null, swd: null };
+  const score = (p) => p.h * p.h * (p.t || 0) * Math.max(0, Math.cos((angDiff(p.d, facing) * Math.PI) / 180));
+  const best = ok.reduce((a, b) => (score(b) > score(a) ? b : a));
+  return { swh: best.h, swp: best.t, swd: best.d };
+}
+
 export function buildHours(raw) {
   const spots = {};
   SPOTS.forEach((s, i) => {
@@ -177,7 +187,7 @@ export function buildHours(raw) {
           slot(x.t).wave[r.model.key] = {
             hs: x.hs, t: x.tm, dir: x.dir,
             wwh: x.ws ? x.ws.h : 0, wwp: x.ws ? x.ws.t : null, wwd: x.ws ? x.ws.d : null,
-            swh: x.sw1 ? x.sw1.h : 0, swp: x.sw1 ? x.sw1.t : null, swd: x.sw1 ? x.sw1.d : null,
+            ...pickSwell([x.sw1, x.sw2], s.facing),
           };
         });
         return;
@@ -220,11 +230,20 @@ export function buildHours(raw) {
       const vW = (m) => (leadH <= 48 ? VSHORT[m.key] ?? m.weight : m.weight);
       const W = (f) => w.map((m) => ({ v: h.wind[m.key][f], w: wW(m) }));
       const V = (f) => v.map((m) => ({ v: h.wave[m.key][f], w: vW(m) }));
+      // Houle : si les modèles voient des houles de directions différentes (écart > 60°), on ne fait pas la moyenne
+      // des directions (elle donnerait une houle qui n'existe pas) : on garde celles qui arrivent face au spot (±75°).
+      let vs = v.filter((m) => h.wave[m.key].swd != null && h.wave[m.key].swh != null);
+      const sds = vs.map((m) => h.wave[m.key].swd);
+      if (sds.length > 1 && Math.max(...sds.flatMap((a) => sds.map((b) => angDiff(a, b)))) > 60) {
+        const faced = vs.filter((m) => angDiff(h.wave[m.key].swd, s.facing) <= 75);
+        if (faced.length) vs = faced;
+      }
+      const VS = (f) => vs.map((m) => ({ v: h.wave[m.key][f], w: vW(m) }));
       h.c = {
         wind: wmean(W("s")), gust: wmean(W("g")), wdir: wdir(W("d")),
         hs: wmean(V("hs")), tm: wmean(V("t")), wd: wdir(V("dir")),
         wwh: wmean(V("wwh")), wwp: wmean(V("wwp")), wwd: wdir(V("wwd")),
-        swh: wmean(V("swh")), swp: wmean(V("swp")), swd: wdir(V("swd")),
+        swh: wmean(VS("swh")), swp: wmean(VS("swp")), swd: wdir(VS("swd")), swellModels: vs.map((m) => m.key),
         nWind: wAll.length, nWave: vAll.length, windModel: w.length === 1 ? w[0].label : null, waveModel: v.length <= 2 ? v.map((m) => m.label).join(" + ") : null,
         swpBy: Object.fromEntries(best.map((m) => [m.key, h.wave[m.key].swp])),
         windSpread: spread(wAll.map((m) => h.wind[m.key].s)), hsSpread: spread(vAll.map((m) => h.wave[m.key].hs)),
