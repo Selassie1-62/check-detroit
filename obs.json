@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-27T14:32:27.451Z",
+  "updatedAt": "2026-11-27T15:56:48.690Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,60 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-27T14:24:00Z",
+      "time": "2026-11-27T15:48:00Z",
       "gustHour": false,
-      "wind": 8,
+      "wind": 7,
       "dir": 130,
-      "gust": 11,
-      "tempC": 2.5
+      "gust": 10,
+      "tempC": 1.1
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "time": "2026-11-27T14:24:00Z",
+      "time": "2026-11-27T15:48:00Z",
       "gustHour": false,
       "wind": 8,
       "dir": 130,
-      "gust": 15,
-      "tempC": 2.1
+      "gust": 12,
+      "tempC": 1.5
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "time": "2026-11-27T14:24:00Z",
+      "time": "2026-11-27T15:48:00Z",
       "gustHour": false,
-      "wind": 11,
-      "dir": 130,
-      "gust": 15,
-      "tempC": 2.5
+      "wind": 7,
+      "dir": 140,
+      "gust": 10,
+      "tempC": 1.4
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-27T14:24:00Z",
+      "time": "2026-11-27T15:48:00Z",
       "gustHour": false,
-      "wind": 12,
-      "dir": 130,
-      "gust": 15,
-      "tempC": 3.1
+      "wind": 10,
+      "dir": 140,
+      "gust": 13,
+      "tempC": 2.4
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-27T14:18:00Z",
+      "time": "2026-11-27T15:42:00Z",
       "gustHour": false,
-      "wind": 10,
-      "dir": 140,
-      "gust": 14,
-      "tempC": 2.6
+      "wind": 9,
+      "dir": 130,
+      "gust": 12,
+      "tempC": 1.5
     }
   ]
 }
