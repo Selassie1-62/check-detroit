@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-28T15:43:59.167Z",
+  "updatedAt": "2026-11-28T16:45:35.888Z",
   "source": "Météo-France, données d'observation (DPObs)",
   "stations": [
     {
@@ -7,50 +7,60 @@
       "label": "Cap Gris-Nez (Audinghen)",
       "id": "62054001",
       "name": "CAP-GRIS-NEZ",
-      "time": "2026-11-28T15:36:00Z",
+      "time": "2026-11-28T16:42:00Z",
       "gustHour": false,
-      "wind": 21,
-      "dir": 160,
-      "gust": 26,
-      "tempC": 3.8
+      "wind": 23,
+      "dir": 150,
+      "gust": 30,
+      "tempC": 4.1
     },
     {
       "key": "boulogne",
       "label": "Boulogne (sémaphore)",
       "id": "62160001",
       "name": "BOULOGNE-SEM",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-28T16:42:00Z",
+      "gustHour": false,
+      "wind": 17,
+      "dir": 140,
+      "gust": 27,
+      "tempC": 3.7
     },
     {
       "key": "calais",
       "label": "Calais",
       "id": "62548002",
       "name": "CALAIS-MARCK",
-      "error": "Aucun accès ne fonctionne :\n  403 Obs/v1 apikey json {\"code\":\"900908\",\"message\":\"Resource forbidden \",\"description\":\"Res"
+      "time": "2026-11-28T16:42:00Z",
+      "gustHour": false,
+      "wind": 11,
+      "dir": 150,
+      "gust": 15,
+      "tempC": 3.1
     },
     {
       "key": "dunkerque",
       "label": "Dunkerque",
       "id": "59183001",
       "name": "DUNKERQUE",
-      "time": "2026-11-28T15:36:00Z",
+      "time": "2026-11-28T16:36:00Z",
       "gustHour": false,
-      "wind": 20,
+      "wind": 17,
       "dir": 150,
-      "gust": 27,
-      "tempC": 2.1
+      "gust": 24,
+      "tempC": 2.3
     },
     {
       "key": "touquet",
       "label": "Le Touquet",
       "id": "62826001",
       "name": "LE-TOUQUET",
-      "time": "2026-11-28T15:30:00Z",
+      "time": "2026-11-28T16:36:00Z",
       "gustHour": false,
       "wind": 14,
       "dir": 140,
       "gust": 19,
-      "tempC": 3.4
+      "tempC": 3.5
     }
   ]
 }
